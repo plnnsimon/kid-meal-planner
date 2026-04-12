@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, toRaw } from 'vue'
+import { ref, watch } from 'vue'
 import type { RecipePayload } from '@/stores/recipe.store'
 import { MEAL_TYPES, MEAL_TYPE_LABELS, COMMON_ALLERGENS, INGREDIENT_CATEGORIES } from '@/types'
 import type { Ingredient, MealType, IngredientCategory } from '@/types'
@@ -18,15 +18,15 @@ const emit = defineEmits<{
 }>()
 
 // Local copy so we can mutate freely and emit on change
-const form = ref<RecipePayload>(structuredClone(toRaw(props.modelValue)))
+const form = ref<RecipePayload>(JSON.parse(JSON.stringify(props.modelValue)))
 
 watch(() => props.modelValue, (v) => {
-  form.value = structuredClone(toRaw(v))
+  form.value = JSON.parse(JSON.stringify(v))
 }, { deep: true })
 
 function patch<K extends keyof RecipePayload>(key: K, value: RecipePayload[K]) {
   form.value[key] = value
-  emit('update:modelValue', structuredClone(toRaw(form.value)))
+  emit('update:modelValue', JSON.parse(JSON.stringify(form.value)))
 }
 
 // ── Meal types ───────────────────────────────────────────────────────────────
