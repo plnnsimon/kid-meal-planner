@@ -4,7 +4,7 @@ import { MEAL_TYPE_LABELS } from '@/types'
 import NutritionBadge from './NutritionBadge.vue'
 
 defineProps<{ recipe: Recipe }>()
-defineEmits<{ click: []; favorite: [] }>()
+defineEmits<{ click: []; favorite: []; delete: [] }>()
 </script>
 
 <template>
@@ -33,6 +33,15 @@ defineEmits<{ click: []; favorite: [] }>()
         <span :class="recipe.isFavorite ? 'text-red-500' : 'text-gray-400'">
           {{ recipe.isFavorite ? '♥' : '♡' }}
         </span>
+      </button>
+
+      <!-- Delete button -->
+      <button
+        type="button"
+        class="absolute top-2 right-12 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-sm text-gray-400 hover:text-red-500"
+        @click.stop="$emit('delete')"
+      >
+        🗑
       </button>
 
       <!-- Meal type chips -->

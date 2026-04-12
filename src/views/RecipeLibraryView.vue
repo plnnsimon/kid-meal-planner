@@ -93,6 +93,7 @@ function openRecipe(id: string) {
           :recipe="recipe"
           @click="openRecipe(recipe.id)"
           @favorite="recipeStore.toggleFavorite(recipe.id)"
+          @delete="recipeStore.remove(recipe.id)"
         />
       </div>
     </div>
