@@ -3,6 +3,7 @@ import { ref, watch, onMounted } from 'vue'
 import { useChildStore } from '@/stores/child.store'
 import AllergyChip from '@/components/common/AllergyChip.vue'
 import ImageUpload from '@/components/common/ImageUpload.vue'
+import AppButton from '@/components/common/AppButton.vue'
 import { COMMON_ALLERGENS, DIETARY_RESTRICTION_PRESETS } from '@/types'
 
 const child = useChildStore()
@@ -276,15 +277,9 @@ async function save() {
       </Transition>
 
       <!-- ── Save button ─────────────────────────────────────────────────────── -->
-      <button
-        type="button"
-        class="w-full py-4 rounded-2xl bg-primary-500 text-white font-semibold text-base shadow-sm active:bg-primary-600 disabled:opacity-50 transition-colors"
-        :disabled="child.saving"
-        @click="save"
-      >
-        <span v-if="child.saving">Saving…</span>
-        <span v-else>Save Profile</span>
-      </button>
+      <AppButton type="button" :loading="child.saving" @click="save">
+        Save Profile
+      </AppButton>
 
     </template>
   </div>

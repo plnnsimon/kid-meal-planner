@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useAuthStore } from '@/stores/auth.store'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -37,7 +38,6 @@ const router = createRouter({
       name: 'settings',
       component: () => import('@/views/SettingsView.vue'),
     },
-    // Auth stub — not linked in nav yet
     {
       path: '/login',
       name: 'login',
@@ -46,12 +46,15 @@ const router = createRouter({
   ],
 })
 
-// ── Auth guard (disabled — enable when real auth is wired up) ─────────────────
-// router.beforeEach(async (to) => {
-//   const auth = useAuthStore()
-//   if (!auth.isAuthenticated && to.name !== 'login') {
-//     return { name: 'login' }
-//   }
-// })
+// ── Auth guard ────────────────────────────────────────────────────────────────
+router.beforeEach(async (to) => {
+  const auth = useAuthStore()
+  if (!auth.isAuthenticated && to.name !== 'login') {
+    return { name: 'login' }
+  }
+  if (auth.isAuthenticated && to.name === 'login') {
+    return { name: 'week-plan' }
+  }
+})
 
 export default router

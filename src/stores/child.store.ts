@@ -17,6 +17,7 @@ export const useChildStore = defineStore('child', () => {
   // ── Load ────────────────────────────────────────────────────────────────────
 
   async function load() {
+    if (!auth.userId) return
     loading.value = true
     error.value = null
     try {
@@ -38,6 +39,7 @@ export const useChildStore = defineStore('child', () => {
   // ── Save (upsert) ───────────────────────────────────────────────────────────
 
   async function save(updates: Partial<Omit<ChildProfile, 'id' | 'userId' | 'createdAt'>>) {
+    if (!auth.userId) return
     saving.value = true
     error.value = null
     try {
@@ -87,6 +89,7 @@ export const useChildStore = defineStore('child', () => {
   // ── Avatar upload ────────────────────────────────────────────────────────────
 
   async function uploadAvatar(file: File): Promise<string> {
+    if (!auth.userId) throw new Error('Not authenticated')
     const ext = file.name.split('.').pop()
     const path = `${auth.userId}/avatar.${ext}`
 

@@ -63,6 +63,7 @@ export const useWeekPlanStore = defineStore('weekPlan', () => {
   // ── Load (or create) plan for current week ───────────────────────────────────
 
   async function load() {
+    if (!auth.userId) return
     loading.value = true
     error.value = null
     try {

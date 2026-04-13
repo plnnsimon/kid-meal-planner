@@ -83,6 +83,13 @@ export interface Ingredient {
   amount: number
   unit: string
   category: IngredientCategory
+  // Nutrition per 100 g — populated when selected from Open Food Facts
+  caloriesPer100g?: number
+  proteinPer100g?: number
+  carbsPer100g?: number
+  fatPer100g?: number
+  fiberPer100g?: number
+  sugarPer100g?: number
 }
 
 export interface Recipe {

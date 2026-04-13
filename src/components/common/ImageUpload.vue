@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 
 const props = defineProps<{
   currentUrl?: string | null
@@ -13,6 +13,13 @@ const emit = defineEmits<{
 
 const inputRef = ref<HTMLInputElement>()
 const previewUrl = ref<string | null>(props.currentUrl ?? null)
+const hasLocalFile = ref(false)
+
+watch(() => props.currentUrl, (url) => {
+  if (!hasLocalFile.value) {
+    previewUrl.value = url ?? null
+  }
+})
 
 function open() {
   inputRef.value?.click()
@@ -21,6 +28,7 @@ function open() {
 function onFileChange(e: Event) {
   const file = (e.target as HTMLInputElement).files?.[0]
   if (!file) return
+  hasLocalFile.value = true
   previewUrl.value = URL.createObjectURL(file)
   emit('change', file)
   // Reset so the same file can be re-selected

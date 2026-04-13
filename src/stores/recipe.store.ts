@@ -15,6 +15,7 @@ export const useRecipeStore = defineStore('recipe', () => {
   // ── Load all ─────────────────────────────────────────────────────────────────
 
   async function load() {
+    if (!auth.userId) return
     loading.value = true
     error.value = null
     try {
@@ -42,12 +43,13 @@ export const useRecipeStore = defineStore('recipe', () => {
   // ── Create ───────────────────────────────────────────────────────────────────
 
   async function create(payload: RecipePayload): Promise<Recipe> {
+    if (!auth.userId) throw new Error('Not authenticated')
     saving.value = true
     error.value = null
     try {
       const { data, error: err } = await supabase
         .from('recipes')
-        .insert(toRow(auth.userId, payload))
+        .insert(toRow(auth.userId!, payload))
         .select()
         .single()
 
@@ -66,12 +68,13 @@ export const useRecipeStore = defineStore('recipe', () => {
   // ── Update ───────────────────────────────────────────────────────────────────
 
   async function update(id: string, payload: RecipePayload): Promise<Recipe> {
+    if (!auth.userId) throw new Error('Not authenticated')
     saving.value = true
     error.value = null
     try {
       const { data, error: err } = await supabase
         .from('recipes')
-        .update(toRow(auth.userId, payload))
+        .update(toRow(auth.userId!, payload))
         .eq('id', id)
         .select()
         .single()
@@ -114,6 +117,7 @@ export const useRecipeStore = defineStore('recipe', () => {
   // ── Image upload ─────────────────────────────────────────────────────────────
 
   async function uploadImage(file: File, recipeId: string): Promise<string> {
+    if (!auth.userId) throw new Error('Not authenticated')
     const ext = file.name.split('.').pop()
     const path = `${auth.userId}/${recipeId}.${ext}`
 

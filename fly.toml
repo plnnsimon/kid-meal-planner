@@ -1,4 +1,4 @@
-# fly.toml app configuration file generated for kid-meal-planner on 2026-04-12T23:20:07+03:00
+# fly.toml app configuration file generated for kid-meal-planner on 2026-04-12T23:56:42+03:00
 #
 # See https://fly.io/docs/reference/configuration/ for information about how to use this file.
 #
@@ -7,6 +7,9 @@ app = 'kid-meal-planner'
 primary_region = 'sin'
 
 [build]
+  [build.args]
+    VITE_SUPABASE_URL = "https://uyroxnyallexcisxzhzz.supabase.co"
+    VITE_SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5cm94bnlhbGxleGNpc3h6aHp6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzYwMDc3NDgsImV4cCI6MjA5MTU4Mzc0OH0.BzoVCkUHlHosSd-N-uouBfHZWyoBgdQs_mptiJbEEEg"
 
 [http_service]
   internal_port = 8080

@@ -5,6 +5,8 @@ import { MEAL_TYPES, MEAL_TYPE_LABELS, COMMON_ALLERGENS, INGREDIENT_CATEGORIES }
 import type { Ingredient, MealType, IngredientCategory } from '@/types'
 import ImageUpload from '@/components/common/ImageUpload.vue'
 import NutritionBadge from './NutritionBadge.vue'
+import IngredientPicker from './IngredientPicker.vue'
+import AppInput from '@/components/common/AppInput.vue'
 
 const props = defineProps<{
   modelValue: RecipePayload
@@ -49,11 +51,8 @@ function toggleAllergen(a: string) {
 
 // ── Ingredients ───────────────────────────────────────────────────────────────
 
-function addIngredient() {
-  patch('ingredients', [
-    ...form.value.ingredients,
-    { name: '', amount: 0, unit: 'g', category: 'other' } satisfies Ingredient,
-  ])
+function onIngredientAdded(ingredient: Ingredient) {
+  patch('ingredients', [...form.value.ingredients, ingredient])
 }
 
 function removeIngredient(idx: number) {
@@ -98,14 +97,13 @@ function updateStep(idx: number, value: string) {
     <!-- ── Basic info ─────────────────────────────────────────────────────── -->
     <section class="bg-white rounded-2xl shadow-sm divide-y divide-gray-100">
       <div class="px-4 py-3">
-        <label class="block text-xs font-medium text-gray-400 mb-1">Recipe name *</label>
-        <input
-          :value="form.name"
+        <AppInput
+          label="Recipe name"
+          :model-value="form.name"
           type="text"
           placeholder="e.g. Banana Oat Pancakes"
           required
-          class="w-full text-sm text-gray-900 outline-none placeholder-gray-300"
-          @input="patch('name', ($event.target as HTMLInputElement).value)"
+          @update:model-value="patch('name', $event)"
         />
       </div>
       <div class="px-4 py-3">
@@ -172,14 +170,7 @@ function updateStep(idx: number, value: string) {
 
     <!-- ── Ingredients ────────────────────────────────────────────────────── -->
     <section class="bg-white rounded-2xl shadow-sm p-4 space-y-3">
-      <div class="flex items-center justify-between">
-        <label class="text-xs font-medium text-gray-400">Ingredients</label>
-        <button
-          type="button"
-          class="text-sm text-primary-500 font-medium"
-          @click="addIngredient"
-        >+ Add</button>
-      </div>
+      <label class="block text-xs font-medium text-gray-400">Ingredients</label>
 
       <div v-if="!form.ingredients.length" class="text-sm text-gray-300 text-center py-2">
         No ingredients yet
@@ -230,6 +221,8 @@ function updateStep(idx: number, value: string) {
           </select>
         </div>
       </div>
+
+      <IngredientPicker @add="onIngredientAdded" />
     </section>
 
     <!-- ── Nutrition ──────────────────────────────────────────────────────── -->
