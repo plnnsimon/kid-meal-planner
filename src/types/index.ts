@@ -153,3 +153,14 @@ export interface UserProfile {
   createdAt: string
   updatedAt: string
 }
+
+// ─── Friendship ───────────────────────────────────────────────────────────────
+
+export interface Friendship {
+  requesterId: string
+  addresseeId: string
+  status: 'pending' | 'accepted'
+  createdAt: string
+  // Joined profile of the other party (populated by store)
+  profile?: UserProfile
+}

@@ -60,11 +60,11 @@ const weekDays = computed(() =>
 
     <!-- 7-day horizontal scroll grid -->
     <div v-else class="flex-1 overflow-x-auto">
-      <div class="flex gap-2 px-3 py-3 h-full" style="min-width: max-content;">
+      <div class="flex gap-2 px-3 py-3 h-full" style="min-width: max-content; width: 100%;">
         <div
           v-for="(date, idx) in weekDays"
           :key="idx"
-          class="w-36 shrink-0"
+          class="shrink-0 flex-1" style="min-width: 9rem;"
         >
           <DayColumn :day-of-week="idx" :date="date" />
         </div>
