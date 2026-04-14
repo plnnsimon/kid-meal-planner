@@ -49,6 +49,8 @@ const router = createRouter({
 // ── Auth guard ────────────────────────────────────────────────────────────────
 router.beforeEach(async (to) => {
   const auth = useAuthStore()
+  await auth.init()
+
   if (!auth.isAuthenticated && to.name !== 'login') {
     return { name: 'login' }
   }

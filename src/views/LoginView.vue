@@ -12,6 +12,7 @@ const mode = ref<'login' | 'register'>('login')
 const email = ref('')
 const password = ref('')
 const displayName = ref('')
+const rememberMe = ref(true)
 const loading = ref(false)
 const error = ref<string | null>(null)
 const nameError = ref<string | null>(null)
@@ -67,7 +68,7 @@ async function submit() {
   loading.value = true
   try {
     if (mode.value === 'login') {
-      await auth.login(email.value, password.value)
+      await auth.login(email.value, password.value, rememberMe.value)
     } else {
       await auth.register(email.value, password.value, displayName.value)
     }
@@ -84,6 +85,7 @@ function toggleMode() {
   displayName.value = ''
   email.value = ''
   password.value = ''
+  rememberMe.value = true
   error.value = null
   nameError.value = null
   emailError.value = null
@@ -133,6 +135,15 @@ function toggleMode() {
           required
           :error="passwordError"
         />
+
+        <label v-if="mode === 'login'" class="flex items-center gap-2 cursor-pointer select-none">
+          <input
+            v-model="rememberMe"
+            type="checkbox"
+            class="w-4 h-4 accent-primary-500"
+          />
+          <span class="text-sm text-gray-600">Remember me</span>
+        </label>
 
         <div v-if="error" class="text-sm text-red-500 text-center">{{ error }}</div>
 

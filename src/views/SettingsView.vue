@@ -1,15 +1,23 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
 import { useChildStore } from '@/stores/child.store'
+import { useProfileStore } from '@/stores/profile.store'
 import AllergyChip from '@/components/common/AllergyChip.vue'
 import ImageUpload from '@/components/common/ImageUpload.vue'
 import AppButton from '@/components/common/AppButton.vue'
 import { COMMON_ALLERGENS, DIETARY_RESTRICTION_PRESETS } from '@/types'
 
 const child = useChildStore()
+const profile = useProfileStore()
 
 // ── Local form state ──────────────────────────────────────────────────────────
 
+// Account (user profile)
+const displayName = ref('')
+const profileAvatarUrl = ref<string | null>(null)
+const pendingProfileAvatarFile = ref<File | null>(null)
+
+// Child profile
 const name = ref('')
 const birthDate = ref('')
 const avatarUrl = ref<string | null>(null)
@@ -22,6 +30,13 @@ const savedBanner = ref(false)
 
 // ── Sync store → form when profile loads ─────────────────────────────────────
 
+function syncProfileFromStore() {
+  const p = profile.profile
+  if (!p) return
+  displayName.value = p.displayName
+  profileAvatarUrl.value = p.avatarUrl
+}
+
 function syncFromStore() {
   const p = child.profile
   if (!p) return
@@ -32,11 +47,14 @@ function syncFromStore() {
   dietaryRestrictions.value = [...p.dietaryRestrictions]
 }
 
+watch(() => profile.profile, syncProfileFromStore)
 watch(() => child.profile, syncFromStore)
 
 onMounted(async () => {
   await child.load()
+  await profile.loadOwn()
   syncFromStore()
+  syncProfileFromStore()
 })
 
 // ── Allergen helpers ──────────────────────────────────────────────────────────
@@ -88,7 +106,13 @@ const customDiets = () =>
     d => !(DIETARY_RESTRICTION_PRESETS as readonly string[]).includes(d),
   )
 
-// ── Avatar ────────────────────────────────────────────────────────────────────
+// ── Avatar (profile) ──────────────────────────────────────────────────────────
+
+function onProfileAvatarChange(file: File) {
+  pendingProfileAvatarFile.value = file
+}
+
+// ── Avatar (child) ────────────────────────────────────────────────────────────
 
 function onAvatarChange(file: File) {
   pendingAvatarFile.value = file
@@ -97,6 +121,24 @@ function onAvatarChange(file: File) {
 // ── Save ──────────────────────────────────────────────────────────────────────
 
 async function save() {
+  // Save user profile first
+  let finalProfileAvatarUrl = profileAvatarUrl.value
+
+  if (pendingProfileAvatarFile.value) {
+    try {
+      finalProfileAvatarUrl = await profile.uploadAvatar(pendingProfileAvatarFile.value)
+      pendingProfileAvatarFile.value = null
+    } catch {
+      // Avatar upload failed — save rest of profile without avatar change
+    }
+  }
+
+  await profile.update({
+    displayName: displayName.value,
+    avatarUrl: finalProfileAvatarUrl,
+  })
+
+  // Save child profile
   let finalAvatarUrl = avatarUrl.value
 
   if (pendingAvatarFile.value) {
@@ -135,7 +177,30 @@ async function save() {
 
     <template v-else>
 
-      <!-- ── Avatar ─────────────────────────────────────────────────────────── -->
+      <!-- ── Account ──────────────────────────────────────────────────────────── -->
+      <section class="bg-white rounded-2xl shadow-sm p-4 space-y-3">
+        <h2 class="text-sm font-semibold text-gray-700">Account</h2>
+        <div class="flex flex-col items-center gap-2">
+          <ImageUpload
+            :current-url="profileAvatarUrl"
+            shape="circle"
+            placeholder="Photo"
+            @change="onProfileAvatarChange"
+          />
+          <p class="text-xs text-gray-400">Tap to change avatar</p>
+        </div>
+        <div class="flex items-center gap-3 px-0 py-1 border-b border-gray-100">
+          <label class="text-sm font-medium text-gray-500 w-24 shrink-0">Display name</label>
+          <input
+            v-model="displayName"
+            type="text"
+            placeholder="Your name"
+            class="flex-1 text-sm text-gray-900 bg-transparent outline-none placeholder-gray-300"
+          />
+        </div>
+      </section>
+
+      <!-- ── Child avatar ──────────────────────────────────────────────────────── -->
       <section class="flex flex-col items-center gap-2">
         <ImageUpload
           :current-url="avatarUrl"
@@ -143,7 +208,7 @@ async function save() {
           placeholder="Photo"
           @change="onAvatarChange"
         />
-        <p class="text-xs text-gray-400">Tap to change photo</p>
+        <p class="text-xs text-gray-400">Tap to change child's photo</p>
       </section>
 
       <!-- ── Basic info ─────────────────────────────────────────────────────── -->

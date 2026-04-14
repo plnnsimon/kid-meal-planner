@@ -149,6 +149,10 @@ export const useFooStore = defineStore('foo', () => {
 | 4 | Week planner | ✅ Done |
 | 5 | Shopping list | ✅ Done |
 | 6 | Polish (PWA, empty states, skeletons) | 🔲 Pending |
+| 7 | Auth (Supabase login/register, cookie session, route guard) | ✅ Done |
+| 8 | Public user profiles (profiles table, profile.store.ts, Account section in Settings) | ✅ Done |
+| 9 | Friends system | 🔲 Pending |
+| 10 | Social content viewing + recipe favorites | 🔲 Pending |
 
 ---
 

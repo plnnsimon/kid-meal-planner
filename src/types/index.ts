@@ -143,3 +143,13 @@ export interface ShoppingListItem {
   checked: boolean
   recipeNames: string[]
 }
+
+// ─── User Profile ─────────────────────────────────────────────────────────────
+
+export interface UserProfile {
+  id: string
+  displayName: string
+  avatarUrl: string | null
+  createdAt: string
+  updatedAt: string
+}
