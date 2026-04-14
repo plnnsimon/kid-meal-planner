@@ -1,15 +1,18 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 
 const route = useRoute()
+const { t } = useI18n()
 
-const tabs = [
-  { to: '/plan',     label: 'Plan',     icon: 'calendar' },
-  { to: '/recipes',  label: 'Recipes',  icon: 'book' },
-  { to: '/shopping', label: 'Shopping', icon: 'cart' },
-  { to: '/friends',  label: 'Friends',  icon: 'users' },
-  { to: '/settings', label: 'Settings', icon: 'gear' },
-]
+const tabs = computed(() => [
+  { to: '/plan',     label: t('nav.plan'),     icon: 'calendar' },
+  { to: '/recipes',  label: t('nav.recipes'),  icon: 'book' },
+  { to: '/shopping', label: t('nav.shopping'), icon: 'cart' },
+  { to: '/friends',  label: t('nav.friends'),  icon: 'users' },
+  { to: '/settings', label: t('nav.settings'), icon: 'gear' },
+])
 
 function isActive(path: string) {
   return route.path.startsWith(path)

@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useRecipeStore } from '@/stores/recipe.store'
 import { useAllergyCheck } from '@/composables/useAllergyCheck'
 import type { Recipe, MealType } from '@/types'
-import { MEAL_TYPE_LABELS } from '@/types'
+
+const { t } = useI18n()
 
 const props = defineProps<{
   mealType: MealType
@@ -58,7 +60,7 @@ const filtered = computed(() => {
           <div class="flex items-center justify-between">
             <div>
               <p class="text-xs text-gray-400">{{ dayLabel }}</p>
-              <h2 class="font-bold text-gray-900">{{ MEAL_TYPE_LABELS[mealType] }}</h2>
+              <h2 class="font-bold text-gray-900">{{ t('mealTypes.' + mealType) }}</h2>
             </div>
             <button type="button" class="text-gray-400 text-lg p-1" @click="$emit('close')">✕</button>
           </div>
@@ -73,7 +75,7 @@ const filtered = computed(() => {
             <input
               v-model="search"
               type="search"
-              :placeholder="`Search ${MEAL_TYPE_LABELS[mealType].toLowerCase()} recipes…`"
+              :placeholder="t('mealPicker.searchPlaceholder', { mealType: t('mealTypes.' + mealType).toLowerCase() })"
               class="flex-1 bg-transparent text-sm outline-none"
             />
           </div>
@@ -82,7 +84,7 @@ const filtered = computed(() => {
             class="mt-2 text-xs text-primary-500 font-medium"
             @click="showAll = !showAll"
           >
-            {{ showAll ? `Show ${MEAL_TYPE_LABELS[mealType]} only` : 'Show all recipes' }}
+            {{ showAll ? t('mealPicker.showMealType', { mealType: t('mealTypes.' + mealType) }) : t('mealPicker.showAll') }}
           </button>
         </div>
 
@@ -90,7 +92,7 @@ const filtered = computed(() => {
         <div class="flex-1 overflow-y-auto px-4 pb-6 space-y-2">
 
           <div v-if="!filtered.length" class="text-center text-gray-400 text-sm py-8">
-            No recipes found
+            {{ t('mealPicker.noRecipes') }}
           </div>
 
           <button
@@ -118,7 +120,7 @@ const filtered = computed(() => {
 
               <!-- Allergy warning -->
               <p v-if="hasAllergyConflict(recipe)" class="text-xs text-amber-600 font-medium mt-0.5">
-                ⚠️ Contains {{ conflictingAllergens(recipe).join(', ') }}
+                {{ t('mealPicker.allergyWarning', { allergens: conflictingAllergens(recipe).join(', ') }) }}
               </p>
             </div>
 

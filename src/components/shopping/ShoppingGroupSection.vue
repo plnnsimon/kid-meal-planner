@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import type { IngredientCategory, ShoppingListItem } from '@/types'
+
+const { t } = useI18n()
 
 defineProps<{
   category: IngredientCategory
@@ -21,16 +24,13 @@ function formatAmount(amount: number): string {
   return rounded % 1 === 0 ? rounded.toString() : rounded.toFixed(2).replace(/\.?0+$/, '')
 }
 
-function capitalise(str: string): string {
-  return str.charAt(0).toUpperCase() + str.slice(1)
-}
 </script>
 
 <template>
   <section class="bg-white rounded-2xl shadow-sm overflow-hidden">
     <!-- Category heading -->
     <div class="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
-      <h2 class="font-semibold text-gray-800 text-base">{{ capitalise(category) }}</h2>
+      <h2 class="font-semibold text-gray-800 text-base">{{ t('ingredientCategories.' + category) }}</h2>
       <span class="text-xs font-medium text-gray-400 bg-gray-100 rounded-full px-2 py-0.5">
         {{ items.length }}
       </span>

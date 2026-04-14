@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import type { RecipePayload } from '@/stores/recipe.store'
-import { MEAL_TYPES, MEAL_TYPE_LABELS, COMMON_ALLERGENS, INGREDIENT_CATEGORIES } from '@/types'
-import type { Ingredient, MealType, IngredientCategory } from '@/types'
+import { MEAL_TYPES, COMMON_ALLERGENS, INGREDIENT_CATEGORIES } from '@/types'
+import type { Ingredient, MealType, IngredientCategory, NutritionInfo } from '@/types'
+
+const { t } = useI18n()
 import ImageUpload from '@/components/common/ImageUpload.vue'
 import NutritionBadge from './NutritionBadge.vue'
 import IngredientPicker from './IngredientPicker.vue'
@@ -52,18 +55,97 @@ function toggleAllergen(a: string) {
 // ── Ingredients ───────────────────────────────────────────────────────────────
 
 function onIngredientAdded(ingredient: Ingredient) {
-  patch('ingredients', [...form.value.ingredients, ingredient])
+  form.value.ingredients.push(ingredient)
+  applyAutoNutrition()
+  emit('update:modelValue', JSON.parse(JSON.stringify(form.value)))
 }
 
 function removeIngredient(idx: number) {
-  patch('ingredients', form.value.ingredients.filter((_, i) => i !== idx))
+  form.value.ingredients = form.value.ingredients.filter((_, i) => i !== idx)
+  applyAutoNutrition()
+  emit('update:modelValue', JSON.parse(JSON.stringify(form.value)))
 }
 
 function updateIngredient(idx: number, field: keyof Ingredient, value: string | number) {
-  const next = form.value.ingredients.map((ing, i) =>
+  form.value.ingredients = form.value.ingredients.map((ing, i) =>
     i === idx ? { ...ing, [field]: value } : ing,
-  )
-  patch('ingredients', next as Ingredient[])
+  ) as Ingredient[]
+  applyAutoNutrition()
+  emit('update:modelValue', JSON.parse(JSON.stringify(form.value)))
+}
+
+// ── Auto-nutrition ────────────────────────────────────────────────────────────
+
+const nutritionAutoMode = ref(true)
+
+function toGrams(amount: number, unit: string): number | null {
+  const u = unit.trim().toLowerCase()
+  if (['g', 'gr', 'gram', 'grams'].includes(u)) return amount
+  if (['kg', 'kilogram', 'kilograms'].includes(u)) return amount * 1000
+  if (['ml', 'milliliter', 'millilitre', 'milliliters', 'millilitres'].includes(u)) return amount
+  if (['l', 'liter', 'litre', 'liters', 'litres'].includes(u)) return amount * 1000
+  if (['oz', 'ounce', 'ounces'].includes(u)) return amount * 28.35
+  if (['lb', 'lbs', 'pound', 'pounds'].includes(u)) return amount * 453.59
+  if (['tsp', 'teaspoon', 'teaspoons'].includes(u)) return amount * 5
+  if (['tbsp', 'tablespoon', 'tablespoons'].includes(u)) return amount * 15
+  if (['cup', 'cups'].includes(u)) return amount * 240
+  if (['piece', 'pieces', 'pc', 'pcs', 'whole'].includes(u)) return amount * 100
+  return null
+}
+
+function computeNutritionFromIngredients(): NutritionInfo | null {
+  const servings = form.value.servings || 1
+  let calories = 0, protein = 0, carbs = 0, fat = 0, fiber = 0, sugar = 0
+  let hasAnyData = false
+
+  for (const ing of form.value.ingredients) {
+    if (ing.caloriesPer100g == null) continue
+    const grams = toGrams(ing.amount, ing.unit)
+    if (grams == null) continue
+    const factor = grams / 100
+    calories += (ing.caloriesPer100g ?? 0) * factor
+    protein  += (ing.proteinPer100g  ?? 0) * factor
+    carbs    += (ing.carbsPer100g    ?? 0) * factor
+    fat      += (ing.fatPer100g      ?? 0) * factor
+    fiber    += (ing.fiberPer100g    ?? 0) * factor
+    sugar    += (ing.sugarPer100g    ?? 0) * factor
+    hasAnyData = true
+  }
+
+  if (!hasAnyData) return null
+
+  return {
+    calories: Math.round(calories / servings),
+    protein:  Math.round((protein  / servings) * 10) / 10,
+    carbs:    Math.round((carbs    / servings) * 10) / 10,
+    fat:      Math.round((fat      / servings) * 10) / 10,
+    fiber:    Math.round((fiber    / servings) * 10) / 10,
+    sugar:    Math.round((sugar    / servings) * 10) / 10,
+  }
+}
+
+// Mutates form.value.nutrition in place — no emit, caller handles that
+function applyAutoNutrition() {
+  if (!nutritionAutoMode.value) return
+  const computed = computeNutritionFromIngredients()
+  form.value.nutrition = computed ?? { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0 }
+}
+
+function onNutritionManualEdit(field: keyof NutritionInfo, value: number) {
+  nutritionAutoMode.value = false
+  patch('nutrition', { ...form.value.nutrition, [field]: value })
+}
+
+function enableAutoNutrition() {
+  nutritionAutoMode.value = true
+  applyAutoNutrition()
+  emit('update:modelValue', JSON.parse(JSON.stringify(form.value)))
+}
+
+function patchServings(value: number) {
+  form.value.servings = value
+  applyAutoNutrition()
+  emit('update:modelValue', JSON.parse(JSON.stringify(form.value)))
 }
 
 // ── Instructions ─────────────────────────────────────────────────────────────
@@ -89,7 +171,7 @@ function updateStep(idx: number, value: string) {
       <ImageUpload
         :current-url="form.imageUrl"
         shape="rect"
-        placeholder="Add recipe photo"
+        :placeholder="t('recipeForm.addPhoto')"
         @change="$emit('image-change', $event)"
       />
     </section>
@@ -98,19 +180,19 @@ function updateStep(idx: number, value: string) {
     <section class="bg-white rounded-2xl shadow-sm divide-y divide-gray-100">
       <div class="px-4 py-3">
         <AppInput
-          label="Recipe name"
+          :label="t('recipeForm.nameLabel')"
           :model-value="form.name"
           type="text"
-          placeholder="e.g. Banana Oat Pancakes"
+          :placeholder="t('recipeForm.namePlaceholder')"
           required
           @update:model-value="patch('name', $event)"
         />
       </div>
       <div class="px-4 py-3">
-        <label class="block text-xs font-medium text-gray-400 mb-1">Description</label>
+        <label class="block text-xs font-medium text-gray-400 mb-1">{{ t('recipeForm.descriptionLabel') }}</label>
         <textarea
           :value="form.description"
-          placeholder="Short description…"
+          :placeholder="t('recipeForm.descriptionPlaceholder')"
           rows="2"
           class="w-full text-sm text-gray-900 outline-none resize-none placeholder-gray-300"
           @input="patch('description', ($event.target as HTMLTextAreaElement).value)"
@@ -120,7 +202,7 @@ function updateStep(idx: number, value: string) {
 
     <!-- ── Meal types ─────────────────────────────────────────────────────── -->
     <section class="bg-white rounded-2xl shadow-sm p-4 space-y-2">
-      <label class="block text-xs font-medium text-gray-400">Meal types</label>
+      <label class="block text-xs font-medium text-gray-400">{{ t('recipeForm.mealTypesLabel') }}</label>
       <div class="flex gap-2 flex-wrap">
         <button
           v-for="mt in MEAL_TYPES"
@@ -132,7 +214,7 @@ function updateStep(idx: number, value: string) {
             : 'bg-white border-gray-300 text-gray-600'"
           @click="toggleMealType(mt)"
         >
-          {{ MEAL_TYPE_LABELS[mt] }}
+          {{ t('mealTypes.' + mt) }}
         </button>
       </div>
     </section>
@@ -140,7 +222,7 @@ function updateStep(idx: number, value: string) {
     <!-- ── Time & servings ────────────────────────────────────────────────── -->
     <section class="bg-white rounded-2xl shadow-sm divide-y divide-gray-100">
       <div class="flex items-center px-4 py-3 gap-3">
-        <label class="text-sm text-gray-500 w-28 shrink-0">Prep time (min)</label>
+        <label class="text-sm text-gray-500 w-28 shrink-0">{{ t('recipeForm.prepTimeLabel') }}</label>
         <input
           :value="form.prepTime"
           type="number" min="0" max="480"
@@ -149,7 +231,7 @@ function updateStep(idx: number, value: string) {
         />
       </div>
       <div class="flex items-center px-4 py-3 gap-3">
-        <label class="text-sm text-gray-500 w-28 shrink-0">Cook time (min)</label>
+        <label class="text-sm text-gray-500 w-28 shrink-0">{{ t('recipeForm.cookTimeLabel') }}</label>
         <input
           :value="form.cookTime"
           type="number" min="0" max="480"
@@ -158,22 +240,22 @@ function updateStep(idx: number, value: string) {
         />
       </div>
       <div class="flex items-center px-4 py-3 gap-3">
-        <label class="text-sm text-gray-500 w-28 shrink-0">Servings</label>
+        <label class="text-sm text-gray-500 w-28 shrink-0">{{ t('recipeForm.servingsLabel') }}</label>
         <input
           :value="form.servings"
           type="number" min="1" max="20"
           class="flex-1 text-sm text-gray-900 text-right outline-none"
-          @input="patch('servings', Number(($event.target as HTMLInputElement).value))"
+          @input="patchServings(Number(($event.target as HTMLInputElement).value))"
         />
       </div>
     </section>
 
     <!-- ── Ingredients ────────────────────────────────────────────────────── -->
     <section class="bg-white rounded-2xl shadow-sm p-4 space-y-3">
-      <label class="block text-xs font-medium text-gray-400">Ingredients</label>
+      <label class="block text-xs font-medium text-gray-400">{{ t('recipeForm.ingredientsLabel') }}</label>
 
       <div v-if="!form.ingredients.length" class="text-sm text-gray-300 text-center py-2">
-        No ingredients yet
+        {{ t('recipeForm.noIngredients') }}
       </div>
 
       <div
@@ -185,7 +267,7 @@ function updateStep(idx: number, value: string) {
           <input
             :value="ing.name"
             type="text"
-            placeholder="Ingredient name"
+            :placeholder="t('ingredientPicker.namePlaceholder')"
             class="flex-1 text-sm border-b border-gray-200 bg-transparent outline-none pb-1 placeholder-gray-300"
             @input="updateIngredient(idx, 'name', ($event.target as HTMLInputElement).value)"
           />
@@ -199,14 +281,14 @@ function updateStep(idx: number, value: string) {
           <input
             :value="ing.amount"
             type="number" min="0"
-            placeholder="Amount"
+            :placeholder="t('ingredientPicker.amountLabel')"
             class="w-20 text-sm border border-gray-200 rounded-lg px-2 py-1 outline-none"
             @input="updateIngredient(idx, 'amount', Number(($event.target as HTMLInputElement).value))"
           />
           <input
             :value="ing.unit"
             type="text"
-            placeholder="g / ml / pcs"
+            :placeholder="t('ingredientPicker.unitPlaceholder')"
             class="w-20 text-sm border border-gray-200 rounded-lg px-2 py-1 outline-none"
             @input="updateIngredient(idx, 'unit', ($event.target as HTMLInputElement).value)"
           />
@@ -216,7 +298,7 @@ function updateStep(idx: number, value: string) {
             @change="updateIngredient(idx, 'category', ($event.target as HTMLSelectElement).value as IngredientCategory)"
           >
             <option v-for="cat in INGREDIENT_CATEGORIES" :key="cat" :value="cat">
-              {{ cat }}
+              {{ t('ingredientCategories.' + cat) }}
             </option>
           </select>
         </div>
@@ -227,18 +309,29 @@ function updateStep(idx: number, value: string) {
 
     <!-- ── Nutrition ──────────────────────────────────────────────────────── -->
     <section class="bg-white rounded-2xl shadow-sm p-4 space-y-3">
-      <label class="block text-xs font-medium text-gray-400">Nutrition (per serving)</label>
+      <div class="flex items-center justify-between">
+        <label class="text-xs font-medium text-gray-400">{{ t('recipeForm.nutritionLabel') }}</label>
+        <button
+          v-if="!nutritionAutoMode"
+          type="button"
+          class="text-xs px-2 py-0.5 rounded-full bg-primary-100 text-primary-600 font-medium"
+          @click="enableAutoNutrition"
+        >{{ t('recipeForm.nutritionAuto') }}</button>
+        <span v-else class="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-400">
+          {{ t('recipeForm.nutritionAutoActive') }}
+        </span>
+      </div>
       <NutritionBadge :nutrition="form.nutrition" />
       <div class="grid grid-cols-2 gap-2">
         <div v-for="field in (['calories','protein','carbs','fat','fiber','sugar'] as const)" :key="field"
           class="flex flex-col border border-gray-100 rounded-xl p-2"
         >
-          <label class="text-xs text-gray-400 capitalize">{{ field }}{{ field === 'calories' ? ' (kcal)' : ' (g)' }}</label>
+          <label class="text-xs text-gray-400 capitalize">{{ t('recipeForm.' + field) }}</label>
           <input
             :value="form.nutrition[field]"
             type="number" min="0"
             class="text-sm font-medium text-gray-900 outline-none mt-1"
-            @input="patch('nutrition', { ...form.nutrition, [field]: Number(($event.target as HTMLInputElement).value) })"
+            @input="onNutritionManualEdit(field, Number(($event.target as HTMLInputElement).value))"
           />
         </div>
       </div>
@@ -246,7 +339,7 @@ function updateStep(idx: number, value: string) {
 
     <!-- ── Allergens ──────────────────────────────────────────────────────── -->
     <section class="bg-white rounded-2xl shadow-sm p-4 space-y-2">
-      <label class="block text-xs font-medium text-gray-400">Contains allergens</label>
+      <label class="block text-xs font-medium text-gray-400">{{ t('recipeForm.allergensLabel') }}</label>
       <div class="flex flex-wrap gap-2">
         <button
           v-for="a in COMMON_ALLERGENS"
@@ -258,7 +351,7 @@ function updateStep(idx: number, value: string) {
             : 'bg-white border-gray-300 text-gray-600'"
           @click="toggleAllergen(a)"
         >
-          {{ a }}
+          {{ t('allergens.' + a) }}
         </button>
       </div>
     </section>
@@ -266,14 +359,14 @@ function updateStep(idx: number, value: string) {
     <!-- ── Instructions ───────────────────────────────────────────────────── -->
     <section class="bg-white rounded-2xl shadow-sm p-4 space-y-3">
       <div class="flex items-center justify-between">
-        <label class="text-xs font-medium text-gray-400">Instructions</label>
+        <label class="text-xs font-medium text-gray-400">{{ t('recipeForm.instructionsLabel') }}</label>
         <button type="button" class="text-sm text-primary-500 font-medium" @click="addStep">
-          + Step
+          {{ t('recipeForm.addStep') }}
         </button>
       </div>
 
       <div v-if="!form.instructions.length" class="text-sm text-gray-300 text-center py-2">
-        No steps yet
+        {{ t('recipeForm.noSteps') }}
       </div>
 
       <div
@@ -286,7 +379,7 @@ function updateStep(idx: number, value: string) {
         </span>
         <textarea
           :value="step"
-          placeholder="Describe this step…"
+          :placeholder="t('recipeForm.stepPlaceholder')"
           rows="2"
           class="flex-1 text-sm border border-gray-100 rounded-xl p-2 outline-none resize-none focus:border-primary-300 placeholder-gray-300"
           @input="updateStep(idx, ($event.target as HTMLTextAreaElement).value)"
@@ -301,8 +394,8 @@ function updateStep(idx: number, value: string) {
       class="w-full py-4 rounded-2xl bg-primary-500 text-white font-semibold text-base shadow-sm active:bg-primary-600 disabled:opacity-50 transition-colors"
       :disabled="saving || !form.name.trim()"
     >
-      <span v-if="saving">Saving…</span>
-      <span v-else>Save Recipe</span>
+      <span v-if="saving">{{ t('recipeForm.saving') }}</span>
+      <span v-else>{{ t('recipeForm.save') }}</span>
     </button>
 
   </form>

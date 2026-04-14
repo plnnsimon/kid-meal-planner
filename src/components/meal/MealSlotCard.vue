@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import type { MealSlot, MealType } from '@/types'
-import { MEAL_TYPE_LABELS } from '@/types'
 import { useAllergyCheck } from '@/composables/useAllergyCheck'
+
+const { t } = useI18n()
 
 defineProps<{
   slot?: MealSlot
@@ -54,7 +56,7 @@ const { hasAllergyConflict } = useAllergyCheck()
       @click="$emit('tap')"
     >
       <span class="text-xs">+</span>
-      <span class="text-xs">{{ MEAL_TYPE_LABELS[mealType] }}</span>
+      <span class="text-xs">{{ t('mealTypes.' + mealType) }}</span>
     </button>
   </div>
 </template>

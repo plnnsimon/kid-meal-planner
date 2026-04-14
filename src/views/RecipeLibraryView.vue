@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useRecipeStore } from '@/stores/recipe.store'
 import RecipeCard from '@/components/recipe/RecipeCard.vue'
-import { MEAL_TYPES, MEAL_TYPE_LABELS } from '@/types'
+import { MEAL_TYPES } from '@/types'
 import type { MealType } from '@/types'
+
+const { t } = useI18n()
 
 const router = useRouter()
 const recipeStore = useRecipeStore()
@@ -48,7 +51,7 @@ function openRecipe(id: string) {
         <input
           v-model="search"
           type="search"
-          placeholder="Search recipes…"
+          :placeholder="t('recipeLibrary.searchPlaceholder')"
           class="flex-1 bg-transparent text-sm outline-none text-gray-900 placeholder-gray-400"
         />
       </div>
@@ -66,7 +69,7 @@ function openRecipe(id: string) {
           : 'bg-white border-gray-200 text-gray-600'"
         @click="activeFilter = f"
       >
-        {{ f === 'all' ? 'All' : f === 'favorites' ? '♥ Saved' : MEAL_TYPE_LABELS[f as MealType] }}
+        {{ f === 'all' ? t('recipeLibrary.filterAll') : f === 'favorites' ? t('recipeLibrary.filterSaved') : t('mealTypes.' + f) }}
       </button>
     </div>
 
@@ -78,9 +81,9 @@ function openRecipe(id: string) {
     <!-- Empty state -->
     <div v-else-if="!filtered.length" class="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3 p-8">
       <span class="text-5xl">🍳</span>
-      <p class="font-medium">No recipes yet</p>
+      <p class="font-medium">{{ t('recipeLibrary.emptyNoRecipes') }}</p>
       <p class="text-sm text-center">
-        {{ search || activeFilter !== 'all' ? 'Try a different filter' : 'Add your first recipe below' }}
+        {{ search || activeFilter !== 'all' ? t('recipeLibrary.emptyFilter') : t('recipeLibrary.emptyStart') }}
       </p>
     </div>
 

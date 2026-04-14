@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useFriendsStore } from '@/stores/friends.store'
 import { useProfileStore } from '@/stores/profile.store'
 import { useAuthStore } from '@/stores/auth.store'
 import type { UserProfile } from '@/types'
+
+const { t } = useI18n()
 
 const friends = useFriendsStore()
 const profileStore = useProfileStore()
@@ -12,7 +15,7 @@ const auth = useAuthStore()
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 
 const activeTab = ref(0)
-const tabs = ['Friends', 'Requests', 'Find People']
+const tabs = computed(() => [t('friends.tabFriends'), t('friends.tabRequests'), t('friends.tabFind')])
 
 // ── Find People ───────────────────────────────────────────────────────────────
 
@@ -109,7 +112,7 @@ onMounted(async () => {
       <!-- ── Tab 0: Friends ─────────────────────────────────────────────────── -->
       <section v-if="activeTab === 0" class="bg-white rounded-2xl shadow-sm divide-y divide-gray-100">
         <div v-if="!friends.friends.length" class="py-10 text-center text-gray-400 text-sm">
-          No friends yet. Find people in the Find People tab.
+          {{ t('friends.emptyFriends') }}
         </div>
         <div
           v-for="f in friends.friends"
@@ -140,7 +143,7 @@ onMounted(async () => {
             class="text-xs text-red-400 font-medium px-3 py-2 rounded-xl hover:bg-red-50 transition-colors min-h-[44px]"
             @click="handleRemove(otherPartyId(f))"
           >
-            Remove
+            {{ t('friends.remove') }}
           </button>
         </div>
       </section>
@@ -148,7 +151,7 @@ onMounted(async () => {
       <!-- ── Tab 1: Requests ────────────────────────────────────────────────── -->
       <section v-else-if="activeTab === 1" class="bg-white rounded-2xl shadow-sm divide-y divide-gray-100">
         <div v-if="!friends.pendingIncoming.length" class="py-10 text-center text-gray-400 text-sm">
-          No pending requests.
+          {{ t('friends.emptyRequests') }}
         </div>
         <div
           v-for="f in friends.pendingIncoming"
@@ -180,14 +183,14 @@ onMounted(async () => {
               class="text-xs text-white font-medium px-3 py-2 rounded-xl bg-primary-500 hover:bg-primary-600 transition-colors min-h-[44px]"
               @click="handleAccept(f.requesterId)"
             >
-              Accept
+              {{ t('friends.accept') }}
             </button>
             <button
               type="button"
               class="text-xs text-gray-500 font-medium px-3 py-2 rounded-xl bg-gray-100 hover:bg-gray-200 transition-colors min-h-[44px]"
               @click="handleReject(f.requesterId)"
             >
-              Decline
+              {{ t('friends.decline') }}
             </button>
           </div>
         </div>
@@ -199,7 +202,7 @@ onMounted(async () => {
         <input
           v-model="searchQuery"
           type="text"
-          placeholder="Search by display name…"
+          :placeholder="t('friends.searchPlaceholder')"
           class="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm outline-none focus:border-primary-400"
           @input="onSearchInput"
         />
@@ -241,7 +244,7 @@ onMounted(async () => {
               class="text-xs text-gray-400 font-medium px-3 py-2 rounded-xl bg-gray-100 min-h-[44px] cursor-default"
               disabled
             >
-              Friends
+              {{ t('friends.friendsStatus') }}
             </button>
             <button
               v-else-if="friends.hasPendingRequest(user.id)"
@@ -249,7 +252,7 @@ onMounted(async () => {
               class="text-xs text-gray-400 font-medium px-3 py-2 rounded-xl bg-gray-100 min-h-[44px] cursor-default"
               disabled
             >
-              Pending
+              {{ t('friends.pendingStatus') }}
             </button>
             <button
               v-else
@@ -257,7 +260,7 @@ onMounted(async () => {
               class="text-xs text-white font-medium px-3 py-2 rounded-xl bg-primary-500 hover:bg-primary-600 transition-colors min-h-[44px]"
               @click="handleSendRequest(user.id)"
             >
-              Add Friend
+              {{ t('friends.addFriend') }}
             </button>
           </div>
         </div>
@@ -267,12 +270,12 @@ onMounted(async () => {
           v-else-if="searchQuery.trim() && !searching"
           class="py-10 text-center text-gray-400 text-sm"
         >
-          No users found.
+          {{ t('friends.noUsers') }}
         </div>
 
         <!-- Prompt -->
         <div v-else class="py-10 text-center text-gray-400 text-sm">
-          Type a name to search.
+          {{ t('friends.searchPrompt') }}
         </div>
       </section>
 

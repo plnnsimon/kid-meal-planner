@@ -1,18 +1,24 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
+import { useLocale } from '@/composables/useLocale'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
+const { currentLocale, setLocale } = useLocale()
 
-const titles: Record<string, string> = {
-  'week-plan': 'Week Plan',
-  'recipe-library': 'Recipes',
-  'recipe-new': 'New Recipe',
-  'recipe-detail': 'Recipe',
-  'shopping-list': 'Shopping List',
-  'settings': 'Settings',
-  'login': 'Login',
-}
+const titles = computed<Record<string, string>>(() => ({
+  'week-plan': t('header.weekPlan'),
+  'recipe-library': t('header.recipes'),
+  'recipe-new': t('header.newRecipe'),
+  'recipe-detail': t('header.recipeDetail'),
+  'shopping-list': t('header.shoppingList'),
+  'settings': t('header.settings'),
+  'login': t('header.login'),
+  'friends': t('header.friends'),
+}))
 
 const backRoutes = new Set(['recipe-new', 'recipe-detail'])
 const showBack = () => backRoutes.has(String(route.name))
@@ -33,8 +39,14 @@ const showBack = () => backRoutes.has(String(route.name))
       </button>
       <span v-else class="text-2xl">🥗</span>
       <h1 class="text-lg font-bold text-gray-900 flex-1">
-        {{ titles[String(route.name)] ?? 'Kid Meal Planner' }}
+        {{ titles[String(route.name)] ?? t('header.appName') }}
       </h1>
+      <button
+        class="text-xs font-semibold px-2 py-1 rounded-full border border-gray-200 text-gray-500 active:bg-gray-100 transition-colors shrink-0"
+        @click="setLocale(currentLocale === 'en' ? 'uk' : 'en')"
+      >
+        {{ currentLocale === 'en' ? 'UK' : 'EN' }}
+      </button>
     </div>
   </header>
 </template>

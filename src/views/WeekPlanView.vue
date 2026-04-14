@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { onMounted, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useWeekPlanStore } from '@/stores/weekPlan.store'
 import DayColumn from '@/components/meal/DayColumn.vue'
+
+const { t } = useI18n()
 
 const weekPlan = useWeekPlanStore()
 
@@ -34,7 +37,7 @@ const weekDays = computed(() =>
 
       <button type="button" class="flex flex-col items-center" @click="weekPlan.goToToday()">
         <span class="text-sm font-semibold text-gray-900">{{ weekPlan.weekLabel }}</span>
-        <span class="text-xs text-primary-500 font-medium">Tap for today</span>
+        <span class="text-xs text-primary-500 font-medium">{{ t('weekPlan.tapForToday') }}</span>
       </button>
 
       <button

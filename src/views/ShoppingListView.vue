@@ -1,9 +1,12 @@
 <script setup lang="ts">
 import { onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useWeekPlanStore } from '@/stores/weekPlan.store'
 import { useShoppingList } from '@/composables/useShoppingList'
 import ShoppingGroupSection from '@/components/shopping/ShoppingGroupSection.vue'
 import type { IngredientCategory } from '@/types'
+
+const { t } = useI18n()
 
 const CATEGORY_ORDER: IngredientCategory[] = [
   'produce',
@@ -32,10 +35,10 @@ onMounted(() => {
     <!-- Header -->
     <div class="px-4 pt-4 pb-3 flex items-center justify-between gap-3">
       <div class="flex items-baseline gap-2">
-        <h1 class="text-xl font-bold text-gray-900">Shopping List</h1>
+        <h1 class="text-xl font-bold text-gray-900">{{ t('shoppingList.title') }}</h1>
         <span class="text-sm text-gray-500">
-          {{ totalItems }} item{{ totalItems !== 1 ? 's' : '' }}
-          <template v-if="checkedCount > 0"> · {{ checkedCount }} checked</template>
+          {{ t('common.items', { n: totalItems }) }}
+          <template v-if="checkedCount > 0"> · {{ t('common.checked', { n: checkedCount }) }}</template>
         </span>
       </div>
       <button
@@ -44,7 +47,7 @@ onMounted(() => {
         class="text-sm font-medium text-primary-500 active:opacity-70 transition-opacity shrink-0"
         @click="clearChecked"
       >
-        Clear checked
+        {{ t('shoppingList.clearChecked') }}
       </button>
     </div>
 
@@ -62,8 +65,8 @@ onMounted(() => {
         <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
         <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
       </svg>
-      <p class="text-lg font-medium">No items yet</p>
-      <p class="text-sm text-center">Plan some meals this week and your shopping list will appear here.</p>
+      <p class="text-lg font-medium">{{ t('shoppingList.emptyTitle') }}</p>
+      <p class="text-sm text-center">{{ t('shoppingList.emptyMessage') }}</p>
     </div>
 
     <!-- Grouped sections -->

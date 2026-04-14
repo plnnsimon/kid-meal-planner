@@ -1,7 +1,10 @@
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useChildStore } from '@/stores/child.store'
 import { useProfileStore } from '@/stores/profile.store'
+
+const { t } = useI18n()
 import AllergyChip from '@/components/common/AllergyChip.vue'
 import ImageUpload from '@/components/common/ImageUpload.vue'
 import AppButton from '@/components/common/AppButton.vue'
@@ -179,7 +182,7 @@ async function save() {
 
       <!-- ── Account ──────────────────────────────────────────────────────────── -->
       <section class="bg-white rounded-2xl shadow-sm p-4 space-y-3">
-        <h2 class="text-sm font-semibold text-gray-700">Account</h2>
+        <h2 class="text-sm font-semibold text-gray-700">{{ t('settings.accountSection') }}</h2>
         <div class="flex flex-col items-center gap-2">
           <ImageUpload
             :current-url="profileAvatarUrl"
@@ -187,14 +190,14 @@ async function save() {
             placeholder="Photo"
             @change="onProfileAvatarChange"
           />
-          <p class="text-xs text-gray-400">Tap to change avatar</p>
+          <p class="text-xs text-gray-400">{{ t('settings.tapToChangeAvatar') }}</p>
         </div>
         <div class="flex items-center gap-3 px-0 py-1 border-b border-gray-100">
-          <label class="text-sm font-medium text-gray-500 w-24 shrink-0">Display name</label>
+          <label class="text-sm font-medium text-gray-500 w-24 shrink-0">{{ t('settings.displayNameLabel') }}</label>
           <input
             v-model="displayName"
             type="text"
-            placeholder="Your name"
+            :placeholder="t('settings.displayNamePlaceholder')"
             class="flex-1 text-sm text-gray-900 bg-transparent outline-none placeholder-gray-300"
           />
         </div>
@@ -208,22 +211,22 @@ async function save() {
           placeholder="Photo"
           @change="onAvatarChange"
         />
-        <p class="text-xs text-gray-400">Tap to change child's photo</p>
+        <p class="text-xs text-gray-400">{{ t('settings.tapToChangeChildPhoto') }}</p>
       </section>
 
       <!-- ── Basic info ─────────────────────────────────────────────────────── -->
       <section class="bg-white rounded-2xl shadow-sm divide-y divide-gray-100">
         <div class="flex items-center gap-3 px-4 py-3">
-          <label class="text-sm font-medium text-gray-500 w-24 shrink-0">Name</label>
+          <label class="text-sm font-medium text-gray-500 w-24 shrink-0">{{ t('settings.nameLabel') }}</label>
           <input
             v-model="name"
             type="text"
-            placeholder="Child's name"
+            :placeholder="t('settings.namePlaceholder')"
             class="flex-1 text-sm text-gray-900 bg-transparent outline-none placeholder-gray-300"
           />
         </div>
         <div class="flex items-center gap-3 px-4 py-3">
-          <label class="text-sm font-medium text-gray-500 w-24 shrink-0">Birthday</label>
+          <label class="text-sm font-medium text-gray-500 w-24 shrink-0">{{ t('settings.birthdayLabel') }}</label>
           <input
             v-model="birthDate"
             type="date"
@@ -234,7 +237,7 @@ async function save() {
 
       <!-- ── Allergies ──────────────────────────────────────────────────────── -->
       <section class="bg-white rounded-2xl shadow-sm p-4 space-y-3">
-        <h2 class="text-sm font-semibold text-gray-700">Allergies</h2>
+        <h2 class="text-sm font-semibold text-gray-700">{{ t('settings.allergiesSection') }}</h2>
 
         <!-- Common allergens -->
         <div class="flex flex-wrap gap-2">
@@ -265,7 +268,7 @@ async function save() {
           <input
             v-model="customAllergyInput"
             type="text"
-            placeholder="Add other allergy…"
+            :placeholder="t('settings.addAllergyPlaceholder')"
             class="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-primary-400"
             @keydown.enter.prevent="addCustomAllergen"
           />
@@ -274,14 +277,14 @@ async function save() {
             class="px-3 py-2 rounded-xl bg-primary-50 text-primary-600 text-sm font-medium"
             @click="addCustomAllergen"
           >
-            Add
+            {{ t('settings.addAllergyButton') }}
           </button>
         </div>
       </section>
 
       <!-- ── Dietary restrictions ───────────────────────────────────────────── -->
       <section class="bg-white rounded-2xl shadow-sm p-4 space-y-3">
-        <h2 class="text-sm font-semibold text-gray-700">Dietary Restrictions</h2>
+        <h2 class="text-sm font-semibold text-gray-700">{{ t('settings.dietarySection') }}</h2>
 
         <!-- Preset restrictions -->
         <div class="flex flex-wrap gap-2">
@@ -312,7 +315,7 @@ async function save() {
           <input
             v-model="customDietInput"
             type="text"
-            placeholder="Add other restriction…"
+            :placeholder="t('settings.addRestrictionPlaceholder')"
             class="flex-1 text-sm border border-gray-200 rounded-xl px-3 py-2 outline-none focus:border-primary-400"
             @keydown.enter.prevent="addCustomDiet"
           />
@@ -321,7 +324,7 @@ async function save() {
             class="px-3 py-2 rounded-xl bg-primary-50 text-primary-600 text-sm font-medium"
             @click="addCustomDiet"
           >
-            Add
+            {{ t('settings.addRestrictionButton') }}
           </button>
         </div>
       </section>
@@ -337,13 +340,13 @@ async function save() {
           v-if="savedBanner"
           class="bg-green-50 text-green-700 text-sm rounded-xl px-4 py-3 text-center font-medium"
         >
-          Saved!
+          {{ t('settings.saved') }}
         </div>
       </Transition>
 
       <!-- ── Save button ─────────────────────────────────────────────────────── -->
       <AppButton type="button" :loading="child.saving" @click="save">
-        Save Profile
+        {{ t('settings.saveProfile') }}
       </AppButton>
 
     </template>

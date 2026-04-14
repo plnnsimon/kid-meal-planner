@@ -1,8 +1,11 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useRecipeStore, emptyPayload, type RecipePayload } from '@/stores/recipe.store'
 import RecipeForm from '@/components/recipe/RecipeForm.vue'
+
+const { t } = useI18n()
 
 const route = useRoute()
 const router = useRouter()
@@ -96,7 +99,7 @@ async function handleDelete() {
         :class="deleteConfirm ? 'text-red-600' : 'text-gray-400'"
         @click="handleDelete"
       >
-        {{ deleteConfirm ? 'Tap again to delete' : 'Delete' }}
+        {{ deleteConfirm ? t('recipeDetail.deleteConfirm') : t('recipeDetail.delete') }}
       </button>
     </div>
 

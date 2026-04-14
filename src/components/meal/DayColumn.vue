@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useWeekPlanStore } from '@/stores/weekPlan.store'
+import { useLocale } from '@/composables/useLocale'
 import MealSlotCard from './MealSlotCard.vue'
 import MealPickerModal from './MealPickerModal.vue'
 import { MEAL_TYPES } from '@/types'
-import { DAY_LABELS } from '@/stores/weekPlan.store'
 import type { MealType, Recipe } from '@/types'
+
+const { t } = useI18n()
+const { currentLocale } = useLocale()
 
 const props = defineProps<{
   dayOfWeek: number   // 0=Mon … 6=Sun
@@ -17,13 +21,15 @@ const weekPlan = useWeekPlanStore()
 const pickerOpen = ref(false)
 const activeMealType = ref<MealType>('breakfast')
 
+const dayShort = computed(() => (t('days.short') as unknown as string[])[props.dayOfWeek])
+
 const isToday = () => {
   const today = new Date()
   return props.date.toDateString() === today.toDateString()
 }
 
 const dateLabel = () =>
-  props.date.toLocaleDateString('en', { month: 'short', day: 'numeric' })
+  props.date.toLocaleDateString(currentLocale.value === 'uk' ? 'uk-UA' : 'en', { month: 'short', day: 'numeric' })
 
 function openPicker(mealType: MealType) {
   activeMealType.value = mealType
@@ -43,7 +49,7 @@ async function onRecipeSelected(recipe: Recipe) {
       class="text-center pb-1 sticky top-0 bg-gray-50 z-10"
     >
       <p class="text-xs font-bold" :class="isToday() ? 'text-primary-500' : 'text-gray-500'">
-        {{ DAY_LABELS[dayOfWeek] }}
+        {{ dayShort }}
       </p>
       <p class="text-xs" :class="isToday() ? 'text-primary-400' : 'text-gray-400'">
         {{ dateLabel() }}
@@ -64,7 +70,7 @@ async function onRecipeSelected(recipe: Recipe) {
     <MealPickerModal
       v-if="pickerOpen"
       :meal-type="activeMealType"
-      :day-label="`${DAY_LABELS[dayOfWeek]}, ${dateLabel()}`"
+      :day-label="`${dayShort}, ${dateLabel()}`"
       @select="onRecipeSelected"
       @close="pickerOpen = false"
     />
