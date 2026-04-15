@@ -41,7 +41,7 @@ const router = createRouter({
     {
       path: '/friends/:id',
       name: 'friend-profile',
-      component: () => import('@/views/FriendsView.vue'),
+      component: () => import('@/views/FriendProfileView.vue'),
     },
     {
       path: '/settings',

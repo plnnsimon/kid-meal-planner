@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
-import type { Friendship, UserProfile } from '@/types'
+import type { Friendship, UserProfile, ChildProfile, WeekPlan } from '@/types'
 
 export const useFriendsStore = defineStore('friends', () => {
   const auth = useAuthStore()
@@ -187,6 +187,89 @@ export const useFriendsStore = defineStore('friends', () => {
     await loadFriends()
   }
 
+  // ── Friend social data ────────────────────────────────────────────────────────
+
+  async function loadFriendChildProfile(userId: string): Promise<ChildProfile | null> {
+    const { data, error: err } = await supabase
+      .from('child_profiles')
+      .select('*')
+      .eq('user_id', userId)
+      .maybeSingle()
+    if (err || !data) return null
+    return {
+      id: data.id,
+      userId: data.user_id,
+      name: data.name,
+      birthDate: data.birth_date ?? null,
+      avatarUrl: data.avatar_url ?? null,
+      allergies: data.allergies ?? [],
+      dietaryRestrictions: data.dietary_restrictions ?? [],
+      createdAt: data.created_at,
+    }
+  }
+
+  async function loadFriendWeekPlan(userId: string): Promise<WeekPlan | null> {
+    const today = new Date()
+    const day = today.getDay()
+    const diff = day === 0 ? -6 : 1 - day
+    const monday = new Date(today)
+    monday.setDate(today.getDate() + diff)
+    monday.setHours(0, 0, 0, 0)
+    const dateStr = monday.toISOString().split('T')[0]
+
+    const { data: planRow } = await supabase
+      .from('week_plans')
+      .select('*')
+      .eq('user_id', userId)
+      .eq('week_start_date', dateStr)
+      .maybeSingle()
+
+    if (!planRow) return null
+
+    const { data: slotRows, error: sErr } = await supabase
+      .from('meal_slots')
+      .select('*, recipe:recipes(*)')
+      .eq('week_plan_id', planRow.id)
+
+    if (sErr) return null
+
+    return {
+      id: planRow.id,
+      userId: planRow.user_id,
+      weekStartDate: planRow.week_start_date,
+      createdAt: planRow.created_at,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      slots: (slotRows ?? []).map((row: any) => ({
+        id: row.id,
+        weekPlanId: row.week_plan_id,
+        dayOfWeek: row.day_of_week,
+        mealType: row.meal_type,
+        recipeId: row.recipe_id ?? null,
+        recipe: row.recipe ? {
+          id: row.recipe.id,
+          userId: row.recipe.user_id,
+          name: row.recipe.name,
+          description: row.recipe.description ?? '',
+          imageUrl: row.recipe.image_url ?? null,
+          mealTypes: row.recipe.meal_types ?? [],
+          prepTime: row.recipe.prep_time ?? 0,
+          cookTime: row.recipe.cook_time ?? 0,
+          servings: row.recipe.servings ?? 1,
+          nutrition: row.recipe.nutrition ?? { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0, sugar: 0 },
+          ingredients: row.recipe.ingredients ?? [],
+          instructions: row.recipe.instructions ?? [],
+          allergens: row.recipe.allergens ?? [],
+          tags: row.recipe.tags ?? [],
+          isFavorite: row.recipe.is_favorite ?? false,
+          createdAt: row.recipe.created_at,
+          updatedAt: row.recipe.updated_at,
+        } : undefined,
+        servings: row.servings ?? 1,
+        notes: row.notes ?? '',
+      })),
+    }
+  }
+
   // ── Computed helpers ──────────────────────────────────────────────────────────
 
   const isFriend = computed(() => (userId: string) =>
@@ -213,5 +296,7 @@ export const useFriendsStore = defineStore('friends', () => {
     removeFriend,
     isFriend,
     hasPendingRequest,
+    loadFriendChildProfile,
+    loadFriendWeekPlan,
   }
 })

@@ -7,7 +7,7 @@ import { useLocale } from '@/composables/useLocale'
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
-const { currentLocale, setLocale } = useLocale()
+const { currentLocale, setLocale, supportedLocales } = useLocale()
 
 const titles = computed<Record<string, string>>(() => ({
   'week-plan': t('header.weekPlan'),
@@ -18,9 +18,10 @@ const titles = computed<Record<string, string>>(() => ({
   'settings': t('header.settings'),
   'login': t('header.login'),
   'friends': t('header.friends'),
+  'friend-profile': t('header.friendProfile'),
 }))
 
-const backRoutes = new Set(['recipe-new', 'recipe-detail'])
+const backRoutes = new Set(['recipe-new', 'recipe-detail', 'friend-profile'])
 const showBack = () => backRoutes.has(String(route.name))
 </script>
 
@@ -41,12 +42,17 @@ const showBack = () => backRoutes.has(String(route.name))
       <h1 class="text-lg font-bold text-gray-900 flex-1">
         {{ titles[String(route.name)] ?? t('header.appName') }}
       </h1>
-      <button
-        class="text-xs font-semibold px-2 py-1 rounded-full border border-gray-200 text-gray-500 active:bg-gray-100 transition-colors shrink-0"
-        @click="setLocale(currentLocale === 'en' ? 'uk' : 'en')"
+      <select
+        :value="currentLocale"
+        class="text-xs font-semibold px-2 py-1 rounded-full border border-gray-200 text-gray-500 bg-white appearance-none cursor-pointer outline-none focus:border-primary-400 transition-colors shrink-0"
+        @change="setLocale(($event.target as HTMLSelectElement).value as 'en' | 'uk')"
       >
-        {{ currentLocale === 'en' ? 'UK' : 'EN' }}
-      </button>
+        <option
+          v-for="loc in supportedLocales"
+          :key="loc.code"
+          :value="loc.code"
+        >{{ loc.label }}</option>
+      </select>
     </div>
   </header>
 </template>

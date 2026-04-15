@@ -13,15 +13,21 @@ const router = useRouter()
 const recipeStore = useRecipeStore()
 
 const search = ref('')
-const activeFilter = ref<MealType | 'all' | 'favorites'>('all')
+const activeFilter = ref<MealType | 'all' | 'favorites' | 'saved'>('all')
 
-onMounted(() => recipeStore.load())
+onMounted(() => {
+  recipeStore.load()
+  recipeStore.loadSavedRecipes()
+  recipeStore.loadFavoriteIds()
+})
 
 const filtered = computed(() => {
   let list = recipeStore.recipes
 
   if (activeFilter.value === 'favorites') {
     list = list.filter(r => r.isFavorite)
+  } else if (activeFilter.value === 'saved') {
+    list = recipeStore.savedRecipes
   } else if (activeFilter.value !== 'all') {
     list = list.filter(r => r.mealTypes.includes(activeFilter.value as MealType))
   }
@@ -60,7 +66,7 @@ function openRecipe(id: string) {
     <!-- Filter chips -->
     <div class="flex gap-2 px-4 pb-3 overflow-x-auto scrollbar-none">
       <button
-        v-for="f in (['all', ...MEAL_TYPES, 'favorites'] as const)"
+        v-for="f in (['all', ...MEAL_TYPES, 'favorites', 'saved'] as const)"
         :key="f"
         type="button"
         class="shrink-0 px-3 py-1.5 rounded-full text-sm font-medium border transition-colors"
@@ -69,7 +75,7 @@ function openRecipe(id: string) {
           : 'bg-white border-gray-200 text-gray-600'"
         @click="activeFilter = f"
       >
-        {{ f === 'all' ? t('recipeLibrary.filterAll') : f === 'favorites' ? t('recipeLibrary.filterSaved') : t('mealTypes.' + f) }}
+        {{ f === 'all' ? t('recipeLibrary.filterAll') : f === 'favorites' ? t('recipeLibrary.filterSaved') : f === 'saved' ? t('recipeLibrary.filterBookmarked') : t('mealTypes.' + f) }}
       </button>
     </div>
 
@@ -94,9 +100,12 @@ function openRecipe(id: string) {
           v-for="recipe in filtered"
           :key="recipe.id"
           :recipe="recipe"
+          :view-only="activeFilter === 'saved'"
+          :saved="recipeStore.isSaved(recipe.id)"
           @click="openRecipe(recipe.id)"
           @favorite="recipeStore.toggleFavorite(recipe.id)"
           @delete="recipeStore.remove(recipe.id)"
+          @save="recipeStore.isSaved(recipe.id) ? recipeStore.unsaveFavorite(recipe.id) : recipeStore.saveFavorite(recipe.id)"
         />
       </div>
     </div>

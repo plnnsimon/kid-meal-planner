@@ -8,7 +8,7 @@ import MealPickerModal from './MealPickerModal.vue'
 import { MEAL_TYPES } from '@/types'
 import type { MealType, Recipe } from '@/types'
 
-const { t } = useI18n()
+const { t, tm } = useI18n()
 const { currentLocale } = useLocale()
 
 const props = defineProps<{
@@ -21,7 +21,7 @@ const weekPlan = useWeekPlanStore()
 const pickerOpen = ref(false)
 const activeMealType = ref<MealType>('breakfast')
 
-const dayShort = computed(() => (t('days.short') as unknown as string[])[props.dayOfWeek])
+const dayShort = computed(() => (tm('days.short') as string[])[props.dayOfWeek])
 
 const isToday = () => {
   const today = new Date()

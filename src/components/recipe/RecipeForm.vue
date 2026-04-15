@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { RecipePayload } from '@/stores/recipe.store'
 import { MEAL_TYPES, COMMON_ALLERGENS, INGREDIENT_CATEGORIES } from '@/types'
@@ -135,6 +135,11 @@ function onNutritionManualEdit(field: keyof NutritionInfo, value: number) {
   nutritionAutoMode.value = false
   patch('nutrition', { ...form.value.nutrition, [field]: value })
 }
+
+const hasMissingNutritionData = computed(() =>
+  nutritionAutoMode.value &&
+  form.value.ingredients.some(ing => ing.caloriesPer100g == null)
+)
 
 function enableAutoNutrition() {
   nutritionAutoMode.value = true
@@ -322,6 +327,9 @@ function updateStep(idx: number, value: string) {
         </span>
       </div>
       <NutritionBadge :nutrition="form.nutrition" />
+      <p v-if="hasMissingNutritionData" class="text-xs text-amber-600 bg-amber-50 rounded-xl px-3 py-2">
+        {{ t('recipeForm.nutritionIncompleteWarning') }}
+      </p>
       <div class="grid grid-cols-2 gap-2">
         <div v-for="field in (['calories','protein','carbs','fat','fiber','sugar'] as const)" :key="field"
           class="flex flex-col border border-gray-100 rounded-xl p-2"

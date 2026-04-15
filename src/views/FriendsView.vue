@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { useRouter } from 'vue-router'
 import { useFriendsStore } from '@/stores/friends.store'
 import { useProfileStore } from '@/stores/profile.store'
 import { useAuthStore } from '@/stores/auth.store'
@@ -8,6 +9,7 @@ import type { UserProfile } from '@/types'
 
 const { t } = useI18n()
 
+const router = useRouter()
 const friends = useFriendsStore()
 const profileStore = useProfileStore()
 const auth = useAuthStore()
@@ -117,7 +119,8 @@ onMounted(async () => {
         <div
           v-for="f in friends.friends"
           :key="f.requesterId + f.addresseeId"
-          class="flex items-center gap-3 px-4 py-3"
+          class="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
+          @click="router.push({ name: 'friend-profile', params: { id: otherPartyId(f) } })"
         >
           <!-- Avatar -->
           <div class="shrink-0 w-10 h-10 rounded-full overflow-hidden bg-primary-100 flex items-center justify-center">
@@ -141,7 +144,7 @@ onMounted(async () => {
           <button
             type="button"
             class="text-xs text-red-400 font-medium px-3 py-2 rounded-xl hover:bg-red-50 transition-colors min-h-[44px]"
-            @click="handleRemove(otherPartyId(f))"
+            @click.stop="handleRemove(otherPartyId(f))"
           >
             {{ t('friends.remove') }}
           </button>

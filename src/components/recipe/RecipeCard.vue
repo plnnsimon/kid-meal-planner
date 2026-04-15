@@ -3,8 +3,8 @@ import type { Recipe } from '@/types'
 import { MEAL_TYPE_LABELS } from '@/types'
 import NutritionBadge from './NutritionBadge.vue'
 
-defineProps<{ recipe: Recipe }>()
-defineEmits<{ click: []; favorite: []; delete: [] }>()
+defineProps<{ recipe: Recipe; viewOnly?: boolean; saved?: boolean }>()
+defineEmits<{ click: []; favorite: []; delete: []; save: [] }>()
 </script>
 
 <template>
@@ -24,8 +24,19 @@ defineEmits<{ click: []; favorite: []; delete: [] }>()
         🍽️
       </div>
 
-      <!-- Favourite button -->
+      <!-- Save (bookmark) button — viewOnly mode -->
       <button
+        v-if="viewOnly"
+        type="button"
+        class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-sm"
+        @click.stop="$emit('save')"
+      >
+        <span :class="saved ? 'text-primary-500' : 'text-gray-400'">{{ saved ? '🔖' : '🏷️' }}</span>
+      </button>
+
+      <!-- Favourite button — normal mode -->
+      <button
+        v-if="!viewOnly"
         type="button"
         class="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-sm"
         @click.stop="$emit('favorite')"
@@ -35,8 +46,9 @@ defineEmits<{ click: []; favorite: []; delete: [] }>()
         </span>
       </button>
 
-      <!-- Delete button -->
+      <!-- Delete button — normal mode -->
       <button
+        v-if="!viewOnly"
         type="button"
         class="absolute top-2 right-12 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-sm text-gray-400 hover:text-red-500"
         @click.stop="$emit('delete')"

@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
 import type { Recipe, MealType, NutritionInfo, Ingredient } from '@/types'
@@ -11,6 +11,8 @@ export const useRecipeStore = defineStore('recipe', () => {
   const loading = ref(false)
   const saving = ref(false)
   const error = ref<string | null>(null)
+  const favoriteIds = ref<Set<string>>(new Set())
+  const savedRecipes = ref<Recipe[]>([])
 
   // ── Load all ─────────────────────────────────────────────────────────────────
 
@@ -114,6 +116,61 @@ export const useRecipeStore = defineStore('recipe', () => {
     recipe.isFavorite = next
   }
 
+  // ── Favorites (cross-user saves) ──────────────────────────────────────────────
+
+  async function loadFavoriteIds() {
+    if (!auth.userId) return
+    const { data } = await supabase
+      .from('recipe_favorites')
+      .select('recipe_id')
+      .eq('user_id', auth.userId)
+    favoriteIds.value = new Set((data ?? []).map((r: { recipe_id: string }) => r.recipe_id))
+  }
+
+  async function loadSavedRecipes() {
+    if (!auth.userId) return
+    await loadFavoriteIds()
+    const ids = [...favoriteIds.value]
+    if (!ids.length) {
+      savedRecipes.value = []
+      return
+    }
+    const { data, error: err } = await supabase
+      .from('recipes')
+      .select('*')
+      .in('id', ids)
+    if (err) return
+    savedRecipes.value = (data ?? []).map(mapRow)
+  }
+
+  async function loadByUser(userId: string): Promise<Recipe[]> {
+    const { data, error: err } = await supabase
+      .from('recipes')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+    if (err) return []
+    return (data ?? []).map(mapRow)
+  }
+
+  async function saveFavorite(recipeId: string) {
+    if (!auth.userId) return
+    await supabase.from('recipe_favorites').insert({ user_id: auth.userId, recipe_id: recipeId })
+    favoriteIds.value = new Set([...favoriteIds.value, recipeId])
+  }
+
+  async function unsaveFavorite(recipeId: string) {
+    if (!auth.userId) return
+    await supabase.from('recipe_favorites').delete()
+      .eq('user_id', auth.userId).eq('recipe_id', recipeId)
+    const newSet = new Set(favoriteIds.value)
+    newSet.delete(recipeId)
+    favoriteIds.value = newSet
+    savedRecipes.value = savedRecipes.value.filter(r => r.id !== recipeId)
+  }
+
+  const isSaved = computed(() => (recipeId: string) => favoriteIds.value.has(recipeId))
+
   // ── Image upload ─────────────────────────────────────────────────────────────
 
   async function uploadImage(file: File, recipeId: string): Promise<string> {
@@ -178,6 +235,8 @@ export const useRecipeStore = defineStore('recipe', () => {
   return {
     recipes, loading, saving, error,
     load, getById, create, update, remove, toggleFavorite, uploadImage,
+    favoriteIds, savedRecipes, loadFavoriteIds, loadSavedRecipes, loadByUser,
+    saveFavorite, unsaveFavorite, isSaved,
   }
 })
 

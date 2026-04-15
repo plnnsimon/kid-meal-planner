@@ -164,3 +164,11 @@ export interface Friendship {
   // Joined profile of the other party (populated by store)
   profile?: UserProfile
 }
+
+// ─── Recipe Favorites ─────────────────────────────────────────────────────────
+
+export interface RecipeFavorite {
+  userId: string
+  recipeId: string
+  createdAt: string
+}
