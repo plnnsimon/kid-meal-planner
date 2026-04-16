@@ -17,6 +17,7 @@ export default {
     login: 'Увійти',
     friends: 'Друзі',
     friendProfile: 'Профіль друга',
+    friendRecipe: 'Рецепт',
   },
   mealTypes: {
     breakfast: 'Сніданок',
@@ -173,6 +174,11 @@ export default {
     childProfileTitle: 'Профіль дитини',
     allergiesLabel: 'Алергени',
     birthdayLabel: 'День народження',
+  },
+  friendRecipe: {
+    ingredients: 'Інгредієнти',
+    instructions: 'Приготування',
+    notFound: 'Рецепт не знайдено.',
   },
   login: {
     appName: 'Дитяче харчування',

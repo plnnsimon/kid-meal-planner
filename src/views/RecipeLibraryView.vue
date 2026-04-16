@@ -41,6 +41,13 @@ const filtered = computed(() => {
 })
 
 function openRecipe(id: string) {
+  if (activeFilter.value === 'saved') {
+    const recipe = recipeStore.savedRecipes.find(r => r.id === id)
+    if (recipe) {
+      router.push({ name: 'friend-recipe', params: { friendId: recipe.userId, recipeId: id } })
+      return
+    }
+  }
   router.push({ name: 'recipe-detail', params: { id } })
 }
 </script>

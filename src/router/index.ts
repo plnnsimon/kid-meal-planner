@@ -44,6 +44,11 @@ const router = createRouter({
       component: () => import('@/views/FriendProfileView.vue'),
     },
     {
+      path: '/friends/:friendId/recipes/:recipeId',
+      name: 'friend-recipe',
+      component: () => import('@/views/FriendRecipeView.vue'),
+    },
+    {
       path: '/settings',
       name: 'settings',
       component: () => import('@/views/SettingsView.vue'),

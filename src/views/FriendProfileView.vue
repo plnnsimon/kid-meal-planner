@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useFriendsStore } from '@/stores/friends.store'
 import { useRecipeStore } from '@/stores/recipe.store'
@@ -9,6 +9,7 @@ import { MEAL_TYPES, MEAL_TYPE_LABELS } from '@/types'
 import type { UserProfile, ChildProfile, WeekPlan, Recipe } from '@/types'
 
 const route = useRoute()
+const router = useRouter()
 const friendId = route.params.id as string
 const friends = useFriendsStore()
 const recipeStore = useRecipeStore()
@@ -188,6 +189,7 @@ const hasPlanSlots = () =>
             :recipe="recipe"
             :view-only="true"
             :saved="recipeStore.isSaved(recipe.id)"
+            @click="router.push({ name: 'friend-recipe', params: { friendId, recipeId: recipe.id } })"
             @save="toggleSave(recipe.id)"
           />
         </div>

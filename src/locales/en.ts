@@ -17,6 +17,7 @@ export default {
     login: 'Login',
     friends: 'Friends',
     friendProfile: "Friend's Profile",
+    friendRecipe: 'Recipe',
   },
   mealTypes: {
     breakfast: 'Breakfast',
@@ -173,6 +174,11 @@ export default {
     childProfileTitle: 'Child Profile',
     allergiesLabel: 'Allergies',
     birthdayLabel: 'Birthday',
+  },
+  friendRecipe: {
+    ingredients: 'Ingredients',
+    instructions: 'Instructions',
+    notFound: 'Recipe not found.',
   },
   login: {
     appName: 'Kid Meal Planner',

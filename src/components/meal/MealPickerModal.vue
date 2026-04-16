@@ -25,10 +25,20 @@ const showAll = ref(false)
 
 onMounted(() => {
   if (!recipeStore.recipes.length) recipeStore.load()
+  if (!recipeStore.savedRecipes.length) recipeStore.loadSavedRecipes()
+})
+
+const allRecipes = computed(() => {
+  const seen = new Set<string>()
+  const merged: typeof recipeStore.recipes = []
+  for (const r of [...recipeStore.recipes, ...recipeStore.savedRecipes]) {
+    if (!seen.has(r.id)) { seen.add(r.id); merged.push(r) }
+  }
+  return merged
 })
 
 const filtered = computed(() => {
-  let list = recipeStore.recipes
+  let list = allRecipes.value
 
   // Default: filter by meal type — toggle off with "Show all"
   if (!showAll.value) {

@@ -19,9 +19,10 @@ const titles = computed<Record<string, string>>(() => ({
   'login': t('header.login'),
   'friends': t('header.friends'),
   'friend-profile': t('header.friendProfile'),
+  'friend-recipe': t('header.friendRecipe'),
 }))
 
-const backRoutes = new Set(['recipe-new', 'recipe-detail', 'friend-profile'])
+const backRoutes = new Set(['recipe-new', 'recipe-detail', 'friend-profile', 'friend-recipe'])
 const showBack = () => backRoutes.has(String(route.name))
 </script>
 
