@@ -147,6 +147,7 @@ export default {
     addRestrictionButton: 'Додати',
     saved: 'Збережено!',
     saveProfile: 'Зберегти профіль',
+    logout: 'Вийти',
   },
   friends: {
     tabFriends: 'Друзі',

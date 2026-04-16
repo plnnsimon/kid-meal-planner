@@ -3,6 +3,8 @@ import { ref, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useChildStore } from '@/stores/child.store'
 import { useProfileStore } from '@/stores/profile.store'
+import { useAuthStore } from '@/stores/auth.store'
+import { useRouter } from 'vue-router'
 
 const { t } = useI18n()
 import AllergyChip from '@/components/common/AllergyChip.vue'
@@ -12,6 +14,8 @@ import { COMMON_ALLERGENS, DIETARY_RESTRICTION_PRESETS } from '@/types'
 
 const child = useChildStore()
 const profile = useProfileStore()
+const auth = useAuthStore()
+const router = useRouter()
 
 // ── Local form state ──────────────────────────────────────────────────────────
 
@@ -119,6 +123,13 @@ function onProfileAvatarChange(file: File) {
 
 function onAvatarChange(file: File) {
   pendingAvatarFile.value = file
+}
+
+// ── Logout ────────────────────────────────────────────────────────────────────
+
+async function logout() {
+  await auth.logout()
+  router.push('/login')
 }
 
 // ── Save ──────────────────────────────────────────────────────────────────────
@@ -347,6 +358,11 @@ async function save() {
       <!-- ── Save button ─────────────────────────────────────────────────────── -->
       <AppButton type="button" :loading="child.saving" @click="save">
         {{ t('settings.saveProfile') }}
+      </AppButton>
+
+      <!-- ── Logout button ──────────────────────────────────────────────────── -->
+      <AppButton type="button" variant="danger" @click="logout">
+        {{ t('settings.logout') }}
       </AppButton>
 
     </template>

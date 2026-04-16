@@ -147,6 +147,7 @@ export default {
     addRestrictionButton: 'Add',
     saved: 'Saved!',
     saveProfile: 'Save Profile',
+    logout: 'Log Out',
   },
   friends: {
     tabFriends: 'Friends',
