@@ -69,9 +69,7 @@ const filtered = computed(() => {
         <!-- Search -->
         <div class="px-4 pb-2 flex-shrink-0">
           <div class="flex items-center gap-2 bg-gray-100 rounded-xl px-3 py-2">
-            <svg class="w-4 h-4 text-gray-400 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
-            </svg>
+            <FontAwesomeIcon icon="magnifying-glass" class="w-4 h-4 text-gray-400 shrink-0" />
             <input
               v-model="search"
               type="search"
@@ -124,9 +122,7 @@ const filtered = computed(() => {
               </p>
             </div>
 
-            <svg class="w-4 h-4 text-gray-300 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-              <path d="M9 18l6-6-6-6"/>
-            </svg>
+            <FontAwesomeIcon icon="chevron-right" class="w-4 h-4 text-gray-300 shrink-0" />
           </button>
         </div>
       </div>

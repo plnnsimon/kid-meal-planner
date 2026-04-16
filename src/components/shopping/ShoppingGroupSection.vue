@@ -54,16 +54,7 @@ function formatAmount(amount: number): string {
             :aria-label="`Toggle ${item.ingredientName}`"
             @click="$emit('toggle', itemKey(item))"
           >
-            <svg
-              v-if="checkedIds.has(itemKey(item))"
-              class="w-3.5 h-3.5 text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              stroke-width="3"
-            >
-              <polyline points="20 6 9 17 4 12" />
-            </svg>
+            <FontAwesomeIcon v-if="checkedIds.has(itemKey(item))" icon="check" class="w-3.5 h-3.5 text-white" />
           </button>
 
           <div class="flex-1 min-w-0">

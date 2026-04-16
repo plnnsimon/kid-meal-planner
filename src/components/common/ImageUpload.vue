@@ -51,10 +51,7 @@ function onFileChange(e: Event) {
         class="w-full h-full object-cover"
       />
       <span v-else class="flex flex-col items-center gap-1 text-gray-400 text-xs">
-        <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
-          <path d="M3 16l4-4 4 4 4-6 4 6"/>
-          <rect x="3" y="3" width="18" height="18" rx="2"/>
-        </svg>
+        <FontAwesomeIcon icon="image" class="w-8 h-8" />
         {{ placeholder ?? 'Upload photo' }}
       </span>
       <!-- Edit overlay when image present -->
@@ -62,9 +59,7 @@ function onFileChange(e: Event) {
         v-if="previewUrl"
         class="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
       >
-        <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path d="M15.232 5.232l3.536 3.536M9 11l6-6 3 3-6 6H9v-3z"/>
-        </svg>
+        <FontAwesomeIcon icon="pencil" class="w-6 h-6 text-white" />
       </div>
     </button>
 

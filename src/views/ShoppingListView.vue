@@ -61,10 +61,7 @@ onMounted(() => {
       v-else-if="totalItems === 0"
       class="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3 p-8"
     >
-      <svg class="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2">
-        <circle cx="9" cy="21" r="1" /><circle cx="20" cy="21" r="1" />
-        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
-      </svg>
+      <FontAwesomeIcon icon="cart-shopping" class="w-16 h-16" />
       <p class="text-lg font-medium">{{ t('shoppingList.emptyTitle') }}</p>
       <p class="text-sm text-center">{{ t('shoppingList.emptyMessage') }}</p>
     </div>

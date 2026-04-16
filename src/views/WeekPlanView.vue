@@ -30,9 +30,7 @@ const weekDays = computed(() =>
         class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center active:bg-gray-200 transition-colors"
         @click="weekPlan.prevWeek()"
       >
-        <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path d="M15 18l-6-6 6-6"/>
-        </svg>
+        <FontAwesomeIcon icon="chevron-left" class="w-4 h-4 text-gray-600" />
       </button>
 
       <button type="button" class="flex flex-col items-center" @click="weekPlan.goToToday()">
@@ -45,9 +43,7 @@ const weekDays = computed(() =>
         class="w-9 h-9 rounded-full bg-gray-100 flex items-center justify-center active:bg-gray-200 transition-colors"
         @click="weekPlan.nextWeek()"
       >
-        <svg class="w-4 h-4 text-gray-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
-          <path d="M9 18l6-6-6-6"/>
-        </svg>
+        <FontAwesomeIcon icon="chevron-right" class="w-4 h-4 text-gray-600" />
       </button>
     </div>
 

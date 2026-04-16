@@ -337,9 +337,9 @@ function updateStep(idx: number, value: string) {
           <label class="text-xs text-gray-400 capitalize">{{ t('recipeForm.' + field) }}</label>
           <input
             :value="form.nutrition[field]"
-            type="number" min="0"
+            type="number" min="0" step="0.1"
             class="text-sm font-medium text-gray-900 outline-none mt-1"
-            @input="onNutritionManualEdit(field, Number(($event.target as HTMLInputElement).value))"
+            @input="onNutritionManualEdit(field, parseFloat(($event.target as HTMLInputElement).value) || 0)"
           />
         </div>
       </div>

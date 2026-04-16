@@ -8,7 +8,7 @@ import MealPickerModal from './MealPickerModal.vue'
 import { MEAL_TYPES } from '@/types'
 import type { MealType, Recipe } from '@/types'
 
-const { t, tm } = useI18n()
+const { tm } = useI18n()
 const { currentLocale } = useLocale()
 
 const props = defineProps<{

@@ -34,9 +34,7 @@ const showBack = () => backRoutes.has(String(route.name))
         class="text-gray-500 mr-1 -ml-1 p-1"
         @click="router.back()"
       >
-        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-          <path d="M15 18l-6-6 6-6"/>
-        </svg>
+        <FontAwesomeIcon icon="chevron-left" class="w-5 h-5" />
       </button>
       <span v-else class="text-2xl">🥗</span>
       <h1 class="text-lg font-bold text-gray-900 flex-1">
