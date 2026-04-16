@@ -207,6 +207,18 @@ export default {
     passwordTooLong: 'Password must be 20 characters or fewer',
     passwordInvalid: 'Password must contain only Latin characters',
   },
+  recipePreview: {
+    prepTime: 'Prep',
+    cookTime: 'Cook',
+    servings: 'Servings',
+    nutrition: 'Nutrition',
+    protein: 'protein',
+    carbs: 'carbs',
+    fat: 'fat',
+    ingredients: 'Ingredients',
+    allergens: 'Allergens',
+    allergyWarning: 'Contains allergens your child is sensitive to: {allergens}',
+  },
   common: {
     loading: 'Loading\u2026',
     error: 'Something went wrong',

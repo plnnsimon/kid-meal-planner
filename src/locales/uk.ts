@@ -207,6 +207,18 @@ export default {
     passwordTooLong: 'Пароль має бути не більше 20 символів',
     passwordInvalid: 'Пароль може містити лише латинські символи',
   },
+  recipePreview: {
+    prepTime: 'Підготовка',
+    cookTime: 'Приготування',
+    servings: 'Порції',
+    nutrition: 'Харчова цінність',
+    protein: 'білки',
+    carbs: 'вуглев.',
+    fat: 'жири',
+    ingredients: 'Інгредієнти',
+    allergens: 'Алергени',
+    allergyWarning: 'Містить алергени, на які чутлива дитина: {allergens}',
+  },
   common: {
     loading: 'Завантаження…',
     error: 'Щось пішло не так',

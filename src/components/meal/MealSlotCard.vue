@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { MealSlot, MealType } from '@/types'
 import { useAllergyCheck } from '@/composables/useAllergyCheck'
+import RecipePreviewModal from './RecipePreviewModal.vue'
 
 const { t } = useI18n()
 
@@ -16,6 +18,8 @@ defineEmits<{
 }>()
 
 const { hasAllergyConflict } = useAllergyCheck()
+
+const showPreview = ref(false)
 </script>
 
 <template>
@@ -40,6 +44,15 @@ const { hasAllergyConflict } = useAllergyCheck()
       <!-- Allergy warning -->
       <span v-if="hasAllergyConflict(slot.recipe)" class="text-amber-500 text-sm">⚠️</span>
 
+      <!-- Preview button -->
+      <button
+        type="button"
+        class="text-gray-300 hover:text-gray-500 p-1 leading-none"
+        @click.stop="showPreview = true"
+      >
+        <FontAwesomeIcon icon="eye" class="w-3.5 h-3.5" />
+      </button>
+
       <!-- Clear button -->
       <button
         type="button"
@@ -47,6 +60,13 @@ const { hasAllergyConflict } = useAllergyCheck()
         @click.stop="$emit('clear')"
       >×</button>
     </div>
+
+    <!-- Recipe preview modal -->
+    <RecipePreviewModal
+      v-if="showPreview && slot?.recipe"
+      :recipe="slot.recipe"
+      @close="showPreview = false"
+    />
 
     <!-- Empty slot -->
     <button
