@@ -44,9 +44,19 @@ const router = createRouter({
       component: () => import('@/views/FriendProfileView.vue'),
     },
     {
+      path: '/friends/:friendId/tasted',
+      name: 'friend-tasted',
+      component: () => import('@/views/FriendTastedView.vue'),
+    },
+    {
       path: '/friends/:friendId/recipes/:recipeId',
       name: 'friend-recipe',
       component: () => import('@/views/FriendRecipeView.vue'),
+    },
+    {
+      path: '/tasted-ingredients',
+      name: 'tasted-ingredients',
+      component: () => import('@/views/TastedIngredientsView.vue'),
     },
     {
       path: '/settings',

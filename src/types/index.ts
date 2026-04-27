@@ -67,6 +67,24 @@ export interface ChildProfile {
   createdAt: string
 }
 
+// ─── Food Item (from ingredients table) ──────────────────────────────────────
+
+export interface FoodItem {
+  id: string
+  name: string
+  nameUk: string | null
+  category: IngredientCategory
+  source: 'system' | 'user'
+  userId: string | null
+  caloriesPer100g: number | null
+  proteinPer100g: number | null
+  carbsPer100g: number | null
+  fatPer100g: number | null
+  fiberPer100g: number | null
+  sugarPer100g: number | null
+  createdAt: string
+}
+
 // ─── Recipe ───────────────────────────────────────────────────────────────────
 
 export interface NutritionInfo {

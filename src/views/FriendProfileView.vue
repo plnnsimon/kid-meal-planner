@@ -142,6 +142,16 @@ const hasPlanSlots = () =>
         <p class="text-sm text-gray-400">{{ t('friendProfile.noChild') }}</p>
       </div>
 
+      <!-- Tasted ingredients link -->
+      <RouterLink
+        v-if="childProfile"
+        :to="{ name: 'friend-tasted', params: { friendId } }"
+        class="bg-white rounded-2xl shadow-sm flex items-center gap-3 px-4 py-3"
+      >
+        <span class="flex-1 text-sm font-medium text-gray-700">{{ t('friendProfile.tastedIngredientsTitle') }}</span>
+        <FontAwesomeIcon icon="chevron-right" class="w-4 h-4 text-gray-400" />
+      </RouterLink>
+
       <!-- Week plan mini-grid -->
       <div class="bg-white rounded-2xl shadow-sm px-4 py-4 space-y-2">
         <h3 class="text-sm font-semibold text-gray-700">{{ t('friendProfile.weekPlanTitle') }}</h3>

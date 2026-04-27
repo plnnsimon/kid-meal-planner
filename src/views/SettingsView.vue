@@ -340,6 +340,14 @@ async function save() {
         </div>
       </section>
 
+      <!-- ── Tasted ingredients ────────────────────────────────────────────────── -->
+      <section class="bg-white rounded-2xl shadow-sm divide-y divide-gray-100">
+        <RouterLink to="/tasted-ingredients" class="flex items-center gap-3 px-4 py-3">
+          <span class="text-sm font-medium text-gray-700 flex-1">{{ t('settings.tastedIngredientsTitle') }}</span>
+          <FontAwesomeIcon icon="chevron-right" class="w-4 h-4 text-gray-400" />
+        </RouterLink>
+      </section>
+
       <!-- ── Error ──────────────────────────────────────────────────────────── -->
       <div v-if="child.error" class="bg-red-50 text-red-600 text-sm rounded-xl px-4 py-3">
         {{ child.error }}

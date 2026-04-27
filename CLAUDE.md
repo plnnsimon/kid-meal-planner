@@ -18,7 +18,7 @@ You are a **senior full-stack developer** working on this project.
 # Kid Meal Planner — Project Context
 
 Mobile-friendly web app for planning a child's weekly meals.
-Primary user: one person (no multi-user auth needed yet).
+Supports real Supabase auth (login/register) with a friends/social layer.
 
 ---
 
@@ -41,55 +41,82 @@ Primary user: one person (no multi-user auth needed yet).
 src/
   assets/main.css          # Tailwind entry + @theme custom colours
   types/index.ts           # All shared TS interfaces and constants
-  lib/supabase.ts          # Supabase client singleton
+  i18n.ts                  # vue-i18n setup (en + uk locales)
+  locales/
+    en.ts                  # English strings
+    uk.ts                  # Ukrainian strings (native Cyrillic, no Unicode escapes)
+  lib/
+    supabase.ts            # Supabase client singleton
+    cookieStorage.ts       # Cookie-backed GoTrueClient storage adapter
   vite-env.d.ts            # Vite ImportMeta types
-  main.ts                  # App entry — createApp, Pinia, Router
+  main.ts                  # App entry — createApp, Pinia, Router, i18n
   App.vue                  # Shell: AppHeader + RouterView + BottomNav
-  router/index.ts          # Routes + commented-out auth guard
+  router/index.ts          # Routes + auth guard (active)
+  data/
+    common-ingredients.json  # Seed list for ingredient autocomplete
   stores/
-    auth.store.ts          # STUB — returns LOCAL_USER_ID = 'local-user'
+    auth.store.ts          # Real Supabase auth — login/register/logout, session init
     child.store.ts         # Child profile CRUD (Supabase)
     recipe.store.ts        # Recipe CRUD + image upload (Supabase Storage)
     weekPlan.store.ts      # Week plan + meal slots CRUD (Supabase)
+    profile.store.ts       # Public user profile CRUD (profiles table)
+    friends.store.ts       # Friendships CRUD — send/accept/decline/remove
   composables/
     useAllergyCheck.ts     # Checks recipe allergens vs child profile
+    useIngredientSearch.ts # Autocomplete over common-ingredients.json
+    useLocale.ts           # Locale switching helper (i18n)
+    useShoppingList.ts     # Derives grouped shopping list from week plan
   components/
     layout/
       AppHeader.vue        # Sticky header; shows back arrow on sub-pages
       BottomNav.vue        # 4-tab fixed bottom nav (Plan/Recipes/Shopping/Settings)
     common/
       AllergyChip.vue      # Toggleable pill chip (active = orange)
+      AppButton.vue        # Reusable button with primary/secondary variants
+      AppInput.vue         # Reusable text input with label + error slot
       ImageUpload.vue      # Tap-to-upload image area (circle or rect)
     recipe/
       RecipeCard.vue       # Grid card: photo, name, kcal, allergen badges
       RecipeForm.vue       # Full recipe create/edit form (v-model:RecipePayload)
       NutritionBadge.vue   # Calorie + macro coloured pills
+      IngredientPicker.vue # Autocomplete ingredient input used in RecipeForm
     meal/
-      MealSlotCard.vue     # Single meal slot — empty or filled
+      MealSlotCard.vue     # Single meal slot — empty or filled; opens preview modal
       DayColumn.vue        # One day: 4 MealSlotCards + opens MealPickerModal
       MealPickerModal.vue  # Bottom sheet: search/filter recipes, allergy warning
+      RecipePreviewModal.vue  # Tap-on-slot modal: shows recipe details before removing
+    shopping/
+      ShoppingGroupSection.vue  # One collapsible group in the shopping list
   views/
-    WeekPlanView.vue       # ✅ 7-day horizontal scroll, week nav arrows
-    RecipeLibraryView.vue  # ✅ Grid + search/filter + FAB
-    RecipeDetailView.vue   # ✅ Create / edit / delete recipe
-    ShoppingListView.vue   # 🔲 Stub — Phase 5
-    SettingsView.vue       # ✅ Child profile, allergies, dietary restrictions
-    LoginView.vue          # Stub — auth not active yet
+    WeekPlanView.vue         # 7-day horizontal scroll, week nav arrows
+    RecipeLibraryView.vue    # Grid + search/filter + FAB; shows bookmarked recipes
+    RecipeDetailView.vue     # Create / edit / delete recipe
+    ShoppingListView.vue     # Grouped shopping list derived from current week plan
+    SettingsView.vue         # Child profile, allergies, dietary restrictions, account
+    LoginView.vue            # Login + register form (Supabase auth, active)
+    FriendsView.vue          # Friends list, pending requests, add-friend search
+    FriendProfileView.vue    # Public profile of a friend
+    FriendRecipeView.vue     # Read-only recipe detail from a friend's library
 supabase/
-  migrations/001_initial_schema.sql   # Full schema; RLS commented out
+  migrations/
+    001_initial_schema.sql   # Core schema (recipes, week_plans, meal_slots, children)
+    002_auth_schema.sql      # RLS policies for auth users
+    003_profiles.sql         # profiles table (display_name, avatar_url, bio)
+    004_friendships.sql      # friendships table (sender, receiver, status)
+    005_social_rls.sql       # RLS for profiles + friendships + social recipe access
 ```
 
 ---
 
-## Auth Strategy (single-user mode)
+## Auth Strategy (Supabase auth — active)
 
-Auth is **intentionally skipped**. Do not enable it unless the user explicitly asks.
+Real auth is **enabled**. `LoginView.vue` is the app entry point for unauthenticated users.
 
-- `auth.store.ts` exports `LOCAL_USER_ID = 'local-user'` — used as `user_id` in all DB writes
-- `LoginView.vue` exists but is not linked in the nav
-- Route guard in `router/index.ts` is present but **commented out**
-- RLS policies in the migration are present but **commented out**
-- All data models keep `userId` fields — real auth is a drop-in when needed
+- `auth.store.ts` — `useAuthStore` holds a `Session`, exposes `userId`, `isAuthenticated`, `login`, `register`, `logout`, `init`
+- `lib/cookieStorage.ts` — custom GoTrueClient storage so the session survives page reloads without relying on localStorage only
+- Route guard in `router/index.ts` is **active** — unauthenticated users are redirected to `/login`
+- RLS policies are applied in migrations `002` – `005`
+- "Remember me" flag persists the session in `localStorage`; without it the session is `sessionStorage`-only
 
 ---
 
@@ -99,7 +126,7 @@ Auth is **intentionally skipped**. Do not enable it unless the user explicitly a
 // Client
 import { supabase } from '@/lib/supabase'
 
-// Always scope queries by user_id
+// Always scope queries by user_id (auth.userId from useAuthStore)
 const { data } = await supabase
   .from('recipes')
   .select('*')
@@ -111,6 +138,19 @@ const { error } = await supabase.storage
   .upload(path, file, { upsert: true })
 
 const { data } = supabase.storage.from('recipe-images').getPublicUrl(path)
+
+// Friendships
+const { data } = await supabase
+  .from('friendships')
+  .select('*')
+  .or(`sender_id.eq.${userId},receiver_id.eq.${userId}`)
+
+// Profiles (public)
+const { data } = await supabase
+  .from('profiles')
+  .select('*')
+  .eq('id', targetUserId)
+  .single()
 ```
 
 ## Store Pattern
@@ -151,8 +191,9 @@ export const useFooStore = defineStore('foo', () => {
 | 6 | Polish (PWA, empty states, skeletons) | 🔲 Pending |
 | 7 | Auth (Supabase login/register, cookie session, route guard) | ✅ Done |
 | 8 | Public user profiles (profiles table, profile.store.ts, Account section in Settings) | ✅ Done |
-| 9 | Friends system | ✅ Done |
-| 10 | Social content viewing + recipe favorites | ✅ Done |
+| 9 | Friends system (friendships table, friends.store.ts, FriendsView, FriendProfileView) | ✅ Done |
+| 10 | Social content viewing + recipe bookmarks (FriendRecipeView, bookmarked recipes in picker) | ✅ Done |
+| 11 | i18n (vue-i18n, en + uk locales, locale switcher in Settings) | ✅ Done |
 
 ---
 

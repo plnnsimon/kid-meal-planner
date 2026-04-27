@@ -4,12 +4,14 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { supabase } from '@/lib/supabase'
 import { useRecipeStore } from '@/stores/recipe.store'
+import { useIngredientsStore } from '@/stores/ingredients.store'
 import NutritionBadge from '@/components/recipe/NutritionBadge.vue'
 import type { Recipe } from '@/types'
 
 const route = useRoute()
 const { t } = useI18n()
 const recipeStore = useRecipeStore()
+const ingredients = useIngredientsStore()
 
 const friendId = route.params.friendId as string
 const recipeId = route.params.recipeId as string
@@ -18,6 +20,8 @@ const recipe = ref<Recipe | null>(null)
 const loading = ref(true)
 
 onMounted(async () => {
+  if (!ingredients.isLoaded) ingredients.load()
+
   const { data, error } = await supabase
     .from('recipes')
     .select('*')
@@ -146,8 +150,13 @@ function toggleSave() {
             class="flex items-center gap-2 text-sm text-gray-700"
           >
             <span class="w-1.5 h-1.5 rounded-full bg-primary-400 shrink-0 mt-0.5" />
-            <span>
+            <span class="flex items-center gap-1.5 flex-wrap">
               <span class="font-medium">{{ ing.name }}</span>
+              <FontAwesomeIcon
+                v-if="ingredients.isTastedByName(ing.name)"
+                icon="check"
+                class="w-3 h-3 text-green-500 shrink-0"
+              />
               <span v-if="ing.amount" class="text-gray-400"> — {{ ing.amount }}{{ ing.unit }}</span>
             </span>
           </li>

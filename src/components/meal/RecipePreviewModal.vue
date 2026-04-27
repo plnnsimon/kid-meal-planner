@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Recipe } from '@/types'
 import { useAllergyCheck } from '@/composables/useAllergyCheck'
+import { useIngredientsStore } from '@/stores/ingredients.store'
 
 const { t } = useI18n()
 
@@ -14,6 +16,12 @@ defineEmits<{
 }>()
 
 const { hasAllergyConflict, conflictingAllergens } = useAllergyCheck()
+
+const ingredients = useIngredientsStore()
+
+onMounted(() => {
+  if (!ingredients.isLoaded) ingredients.load()
+})
 </script>
 
 <template>
@@ -94,7 +102,14 @@ const { hasAllergyConflict, conflictingAllergens } = useAllergyCheck()
                 :key="ingredient.name"
                 class="flex items-center justify-between py-1.5 border-b border-gray-100 last:border-0"
               >
-                <span class="text-sm text-gray-800">{{ ingredient.name }}</span>
+                <div class="flex items-center gap-1.5 min-w-0">
+                  <span class="text-sm text-gray-800">{{ ingredient.name }}</span>
+                  <FontAwesomeIcon
+                    v-if="ingredients.isTastedByName(ingredient.name)"
+                    icon="check"
+                    class="w-3 h-3 text-green-500 shrink-0"
+                  />
+                </div>
                 <span class="text-sm text-gray-400 shrink-0 ml-2">{{ ingredient.amount }} {{ ingredient.unit }}</span>
               </div>
             </div>
