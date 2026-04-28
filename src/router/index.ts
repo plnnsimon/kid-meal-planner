@@ -59,6 +59,11 @@ const router = createRouter({
       component: () => import('@/views/TastedIngredientsView.vue'),
     },
     {
+      path: '/planner/chat',
+      name: 'ai-planner',
+      component: () => import('@/views/AIPlannerView.vue'),
+    },
+    {
       path: '/settings',
       name: 'settings',
       component: () => import('@/views/SettingsView.vue'),

@@ -21,7 +21,7 @@ const weekDays = computed(() =>
 </script>
 
 <template>
-  <div class="flex flex-col h-full">
+  <div class="relative flex flex-col h-full">
 
     <!-- Week navigation bar -->
     <div class="flex items-center justify-between px-4 py-2 bg-white border-b border-gray-100 shrink-0">
@@ -69,6 +69,15 @@ const weekDays = computed(() =>
         </div>
       </div>
     </div>
+
+    <!-- AI Planner FAB -->
+    <RouterLink
+      to="/planner/chat"
+      class="absolute bottom-4 right-4 w-14 h-14 rounded-full bg-primary-500 text-white flex items-center justify-center shadow-lg active:bg-primary-600 transition-colors z-10"
+      :aria-label="t('aiPlanner.title')"
+    >
+      <FontAwesomeIcon icon="robot" class="w-6 h-6" />
+    </RouterLink>
 
   </div>
 </template>

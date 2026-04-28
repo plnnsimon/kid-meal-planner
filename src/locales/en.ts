@@ -251,4 +251,12 @@ export default {
     minLabel: '{n} min',
     servingLabel: '{n} serving | {n} servings',
   },
+  aiPlanner: {
+    title: 'AI Meal Assistant',
+    placeholder: 'Ask me to plan your week...',
+    send: 'Send',
+    thinking: 'Thinking...',
+    clearHistory: 'Clear',
+    emptyState: 'Hello! I can help plan meals for your child this week. What would you like to do?',
+  },
 }

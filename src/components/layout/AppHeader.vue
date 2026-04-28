@@ -22,9 +22,10 @@ const titles = computed<Record<string, string>>(() => ({
   'friend-recipe': t('header.friendRecipe'),
   'tasted-ingredients': t('header.tastedIngredients'),
   'friend-tasted': t('header.friendTasted'),
+  'ai-planner': t('aiPlanner.title'),
 }))
 
-const backRoutes = new Set(['recipe-new', 'recipe-detail', 'friend-profile', 'friend-recipe', 'tasted-ingredients', 'friend-tasted'])
+const backRoutes = new Set(['recipe-new', 'recipe-detail', 'friend-profile', 'friend-recipe', 'tasted-ingredients', 'friend-tasted', 'ai-planner'])
 const showBack = () => backRoutes.has(String(route.name))
 </script>
 

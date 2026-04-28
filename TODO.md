@@ -96,55 +96,93 @@ lightweight activity (last login, recipe count, plan count).
 
 ---
 
-## Phase 14 — AI Integration
+[//]: # (## Phase 14 — AI Integration)
 
-Two features using the Anthropic Claude API (`claude-sonnet-4-6`).
+[//]: # ()
+[//]: # (Two features using the Anthropic Claude API &#40;`claude-sonnet-4-6`&#41;.)
 
-### Feature A — Recipe Generator
-User provides a list of ingredients → AI returns a structured recipe
-(name, ingredients with amounts, steps, estimated kcal + macros).
+[//]: # ()
+[//]: # (### Feature A — Recipe Generator)
 
-**Entry point:** FAB on `RecipeLibraryView.vue` gets a second option  
-"Generate with AI" (opens `RecipeGeneratorModal.vue`).
+[//]: # (User provides a list of ingredients → AI returns a structured recipe)
 
-**Flow:**
-1. User types ingredients (comma-separated or one per line).
-2. POST to a Supabase Edge Function `generate-recipe`.
-3. Edge Function calls Anthropic API with a structured prompt.
-4. Returns JSON matching `RecipePayload` type.
-5. Modal pre-fills `RecipeForm` with the result — user reviews + saves.
+[//]: # (&#40;name, ingredients with amounts, steps, estimated kcal + macros&#41;.)
 
-### Feature B — Weekly Nutrition Analysis
-After the week plan is loaded, a "Analyse week" button in `WeekPlanView.vue`
-calls an Edge Function `analyse-week`.
+[//]: # ()
+[//]: # (**Entry point:** FAB on `RecipeLibraryView.vue` gets a second option  )
 
-**Flow:**
-1. Client sends array of meal slots with recipe names + macros.
-2. Edge Function calls Claude — asks for a short (3–5 sentence) nutritional
-   summary and any flags (e.g. low iron, too much sugar).
-3. Result displayed in a bottom sheet `NutritionAnalysisModal.vue`.
+[//]: # ("Generate with AI" &#40;opens `RecipeGeneratorModal.vue`&#41;.)
 
-### Edge Functions
-- `supabase/functions/generate-recipe/index.ts`
-- `supabase/functions/analyse-week/index.ts`
-- Both use `ANTHROPIC_API_KEY` env var (set in Supabase dashboard).
-- Both validate that the caller is authenticated (check JWT).
+[//]: # ()
+[//]: # (**Flow:**)
 
-### Store / composables
-- `src/composables/useAI.ts` — `generateRecipe(ingredients)`, `analyseWeek(slots)`
-  Wraps `supabase.functions.invoke(...)`.
+[//]: # (1. User types ingredients &#40;comma-separated or one per line&#41;.)
 
-### AI gate (Pro only — Phase 15 prerequisite)
-- Both AI features check `subscriptionStore.isPro` before calling.
-- If not Pro, show upgrade prompt instead.
+[//]: # (2. POST to a Supabase Edge Function `generate-recipe`.)
 
-### Done when
-- [ ] `generate-recipe` edge function returns valid `RecipePayload` JSON
-- [ ] `analyse-week` edge function returns a text summary
-- [ ] RecipeGeneratorModal pre-fills RecipeForm correctly
-- [ ] NutritionAnalysisModal displays summary
-- [ ] Both features blocked for free users (show upgrade prompt)
-- [ ] Typecheck passes clean
+[//]: # (3. Edge Function calls Anthropic API with a structured prompt.)
+
+[//]: # (4. Returns JSON matching `RecipePayload` type.)
+
+[//]: # (5. Modal pre-fills `RecipeForm` with the result — user reviews + saves.)
+
+[//]: # ()
+[//]: # (### Feature B — Weekly Nutrition Analysis)
+
+[//]: # (After the week plan is loaded, a "Analyse week" button in `WeekPlanView.vue`)
+
+[//]: # (calls an Edge Function `analyse-week`.)
+
+[//]: # ()
+[//]: # (**Flow:**)
+
+[//]: # (1. Client sends array of meal slots with recipe names + macros.)
+
+[//]: # (2. Edge Function calls Claude — asks for a short &#40;3–5 sentence&#41; nutritional)
+
+[//]: # (   summary and any flags &#40;e.g. low iron, too much sugar&#41;.)
+
+[//]: # (3. Result displayed in a bottom sheet `NutritionAnalysisModal.vue`.)
+
+[//]: # ()
+[//]: # (### Edge Functions)
+
+[//]: # (- `supabase/functions/generate-recipe/index.ts`)
+
+[//]: # (- `supabase/functions/analyse-week/index.ts`)
+
+[//]: # (- Both use `ANTHROPIC_API_KEY` env var &#40;set in Supabase dashboard&#41;.)
+
+[//]: # (- Both validate that the caller is authenticated &#40;check JWT&#41;.)
+
+[//]: # ()
+[//]: # (### Store / composables)
+
+[//]: # (- `src/composables/useAI.ts` — `generateRecipe&#40;ingredients&#41;`, `analyseWeek&#40;slots&#41;`)
+
+[//]: # (  Wraps `supabase.functions.invoke&#40;...&#41;`.)
+
+[//]: # ()
+[//]: # (### AI gate &#40;Pro only — Phase 15 prerequisite&#41;)
+
+[//]: # (- Both AI features check `subscriptionStore.isPro` before calling.)
+
+[//]: # (- If not Pro, show upgrade prompt instead.)
+
+[//]: # ()
+[//]: # (### Done when)
+
+[//]: # (- [ ] `generate-recipe` edge function returns valid `RecipePayload` JSON)
+
+[//]: # (- [ ] `analyse-week` edge function returns a text summary)
+
+[//]: # (- [ ] RecipeGeneratorModal pre-fills RecipeForm correctly)
+
+[//]: # (- [ ] NutritionAnalysisModal displays summary)
+
+[//]: # (- [ ] Both features blocked for free users &#40;show upgrade prompt&#41;)
+
+[//]: # (- [ ] Typecheck passes clean)
 
 ---
 
