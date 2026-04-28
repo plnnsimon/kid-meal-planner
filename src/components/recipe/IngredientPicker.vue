@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { ref, nextTick } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { Ingredient, IngredientCategory } from '@/types'
+import type { Ingredient, FoodItem, IngredientCategory } from '@/types'
 import { INGREDIENT_CATEGORIES } from '@/types'
-import { useIngredientSearch, type IngredientSuggestion } from '@/composables/useIngredientSearch'
+import { useIngredientSearch } from '@/composables/useIngredientSearch'
+import { useIngredientsStore } from '@/stores/ingredients.store'
 
-const { t } = useI18n()
+const { t, locale } = useI18n()
+const ingredientsStore = useIngredientsStore()
 
 const emit = defineEmits<{
   add: [ingredient: Ingredient]
@@ -21,8 +23,7 @@ const searchInputRef = ref<HTMLInputElement>()
 
 // confirming state
 const selectedName = ref('')
-const selectedCategory = ref<IngredientCategory>('other')
-const fromOff = ref<Omit<IngredientSuggestion, 'name' | 'category'>>({})
+const selectedItem = ref<FoodItem | null>(null)
 const amount = ref(0)
 const unit = ref('g')
 const category = ref<IngredientCategory>('other')
@@ -33,6 +34,10 @@ const manualCalories = ref<number | null>(null)
 const manualProtein = ref<number | null>(null)
 const manualCarbs = ref<number | null>(null)
 const manualFat = ref<number | null>(null)
+
+function displayName(item: FoodItem): string {
+  return locale.value === 'uk' && item.nameUk ? item.nameUk : item.name
+}
 
 async function openSearch() {
   state.value = 'searching'
@@ -47,17 +52,9 @@ function onQueryInput(q: string) {
   search(q)
 }
 
-function selectSuggestion(s: IngredientSuggestion) {
-  selectedName.value = s.name
-  selectedCategory.value = s.category
-  fromOff.value = {
-    caloriesPer100g: s.caloriesPer100g,
-    proteinPer100g: s.proteinPer100g,
-    carbsPer100g: s.carbsPer100g,
-    fatPer100g: s.fatPer100g,
-    fiberPer100g: s.fiberPer100g,
-    sugarPer100g: s.sugarPer100g,
-  }
+function selectSuggestion(s: FoodItem) {
+  selectedName.value = displayName(s)
+  selectedItem.value = s
   amount.value = 0
   unit.value = 'g'
   category.value = s.category
@@ -68,8 +65,7 @@ function selectSuggestion(s: IngredientSuggestion) {
 
 function addManually() {
   selectedName.value = query.value.trim()
-  selectedCategory.value = 'other'
-  fromOff.value = {}
+  selectedItem.value = null
   amount.value = 0
   unit.value = 'g'
   category.value = 'other'
@@ -82,16 +78,39 @@ function addManually() {
   clear()
 }
 
-function confirm() {
+async function confirm() {
   if (!selectedName.value.trim()) return
-  const nutrition: Omit<IngredientSuggestion, 'name' | 'category'> = isManual.value
+
+  if (isManual.value) {
+    await ingredientsStore.addCustom(
+      selectedName.value.trim(),
+      null,
+      category.value,
+      {
+        caloriesPer100g: manualCalories.value,
+        proteinPer100g: manualProtein.value,
+        carbsPer100g: manualCarbs.value,
+        fatPer100g: manualFat.value,
+      }
+    )
+  }
+
+  const nutrition = isManual.value
     ? {
         caloriesPer100g: manualCalories.value ?? undefined,
         proteinPer100g: manualProtein.value ?? undefined,
         carbsPer100g: manualCarbs.value ?? undefined,
         fatPer100g: manualFat.value ?? undefined,
       }
-    : fromOff.value
+    : {
+        caloriesPer100g: selectedItem.value?.caloriesPer100g ?? undefined,
+        proteinPer100g: selectedItem.value?.proteinPer100g ?? undefined,
+        carbsPer100g: selectedItem.value?.carbsPer100g ?? undefined,
+        fatPer100g: selectedItem.value?.fatPer100g ?? undefined,
+        fiberPer100g: selectedItem.value?.fiberPer100g ?? undefined,
+        sugarPer100g: selectedItem.value?.sugarPer100g ?? undefined,
+      }
+
   const ingredient: Ingredient = {
     name: selectedName.value.trim(),
     amount: amount.value,
@@ -107,7 +126,7 @@ function reset() {
   state.value = 'idle'
   query.value = ''
   selectedName.value = ''
-  fromOff.value = {}
+  selectedItem.value = null
   isManual.value = false
   manualCalories.value = null
   manualProtein.value = null
@@ -117,7 +136,7 @@ function reset() {
 }
 
 const hasNutrition = () =>
-  fromOff.value.caloriesPer100g !== undefined
+  selectedItem.value?.caloriesPer100g != null
 </script>
 
 <template>
@@ -159,13 +178,13 @@ const hasNutrition = () =>
       class="border border-gray-100 rounded-xl overflow-hidden bg-white shadow-sm"
     >
       <button
-        v-for="(s, i) in results"
-        :key="i"
+        v-for="s in results"
+        :key="s.id"
         type="button"
         class="w-full flex items-center justify-between gap-3 px-3 py-2.5 text-left hover:bg-gray-50 border-b border-gray-50 last:border-0 transition-colors"
         @click="selectSuggestion(s)"
       >
-        <span class="text-sm font-medium text-gray-800 line-clamp-1 min-w-0">{{ s.name }}</span>
+        <span class="text-sm font-medium text-gray-800 line-clamp-1 min-w-0">{{ displayName(s) }}</span>
         <div class="flex items-center gap-2 shrink-0 text-xs text-gray-400">
           <span v-if="s.caloriesPer100g">{{ Math.round(s.caloriesPer100g) }} kcal</span>
           <span class="capitalize">{{ s.category }}</span>
@@ -204,10 +223,10 @@ const hasNutrition = () =>
       class="text-xs text-gray-500 bg-white rounded-lg px-2.5 py-1.5 border border-gray-100 leading-relaxed"
     >
       {{ t('ingredientPicker.per100g') }}
-      <strong>{{ Math.round(fromOff.caloriesPer100g!) }} kcal</strong>
-      · {{ fromOff.proteinPer100g?.toFixed(1) }} g protein
-      · {{ fromOff.carbsPer100g?.toFixed(1) }} g carbs
-      · {{ fromOff.fatPer100g?.toFixed(1) }} g fat
+      <strong>{{ Math.round(selectedItem!.caloriesPer100g!) }} kcal</strong>
+      · {{ selectedItem!.proteinPer100g?.toFixed(1) }} g protein
+      · {{ selectedItem!.carbsPer100g?.toFixed(1) }} g carbs
+      · {{ selectedItem!.fatPer100g?.toFixed(1) }} g fat
     </div>
 
     <!-- Manual nutrition fields -->
@@ -293,7 +312,7 @@ const hasNutrition = () =>
       <button
         type="button"
         class="flex-1 py-2 rounded-xl bg-primary-500 text-white text-sm font-semibold disabled:opacity-40 active:bg-primary-600 transition-colors"
-        :disabled="!selectedName.trim()"
+        :disabled="!selectedName.trim() || ingredientsStore.saving"
         @click="confirm"
       >
         {{ t('ingredientPicker.add') }}

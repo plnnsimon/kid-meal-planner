@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useChildStore } from '@/stores/child.store'
 import { useProfileStore } from '@/stores/profile.store'
@@ -132,6 +132,20 @@ async function logout() {
   router.push('/login')
 }
 
+// ── Age calculation ───────────────────────────────────────────────────────────
+
+const childAge = computed(() => {
+  if (!birthDate.value) return null
+  const birth = new Date(birthDate.value)
+  if (isNaN(birth.getTime())) return null
+  const now = new Date()
+  let years = now.getFullYear() - birth.getFullYear()
+  let months = now.getMonth() - birth.getMonth()
+  if (now.getDate() < birth.getDate()) months--
+  if (months < 0) { years--; months += 12 }
+  return { years, months }
+})
+
 // ── Save ──────────────────────────────────────────────────────────────────────
 
 async function save() {
@@ -243,6 +257,20 @@ async function save() {
             type="date"
             class="flex-1 text-sm text-gray-900 bg-transparent outline-none"
           />
+          <span
+            v-if="childAge"
+            class="shrink-0 text-xs font-medium text-primary-600 bg-primary-50 rounded-full px-2 py-0.5"
+          >
+            <template v-if="childAge.years > 0 && childAge.months > 0">
+              {{ t('settings.ageYearsMonths', { years: childAge.years, months: childAge.months }) }}
+            </template>
+            <template v-else-if="childAge.years > 0">
+              {{ t('settings.ageYearsOnly', { years: childAge.years }) }}
+            </template>
+            <template v-else>
+              {{ t('settings.ageMonthsOnly', { months: childAge.months }) }}
+            </template>
+          </span>
         </div>
       </section>
 

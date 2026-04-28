@@ -318,13 +318,24 @@ export function createToolExecutor(
       }
 
       case 'get_tasted_ingredients': {
-        const { data, error } = await supabase
-          .from('tasted_ingredients')
-          .select('ingredient_name, tasted')
+        // Get child profile id for this user first
+        const { data: childRow, error: childErr } = await supabase
+          .from('child_profiles')
+          .select('id')
           .eq('user_id', userId)
+          .maybeSingle()
+
+        if (childErr) throw new Error(`get_tasted_ingredients: child lookup failed: ${childErr.message}`)
+        if (!childRow) return { error: 'No child profile found.' }
+
+        const { data, error } = await supabase
+          .from('child_tasted_ingredients')
+          .select('ingredients(name, name_uk, category)')
+          .eq('child_profile_id', childRow.id)
 
         if (error) throw new Error(`get_tasted_ingredients failed: ${error.message}`)
-        return data ?? []
+        // deno-lint-ignore no-explicit-any
+        return (data ?? []).map((r: any) => r.ingredients).filter(Boolean)
       }
 
       case 'search_ingredients': {

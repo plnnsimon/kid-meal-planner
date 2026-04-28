@@ -1,31 +1,7 @@
 import { ref, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
-import type { IngredientCategory, FoodItem } from '@/types'
+import type { FoodItem } from '@/types'
 import { useIngredientsStore } from '@/stores/ingredients.store'
-
-export interface IngredientSuggestion {
-  name: string
-  category: IngredientCategory
-  caloriesPer100g?: number
-  proteinPer100g?: number
-  carbsPer100g?: number
-  fatPer100g?: number
-  fiberPer100g?: number
-  sugarPer100g?: number
-}
-
-function mapToSuggestion(item: FoodItem, lang: string): IngredientSuggestion {
-  return {
-    name: lang === 'uk' && item.nameUk ? item.nameUk : item.name,
-    category: item.category,
-    caloriesPer100g: item.caloriesPer100g ?? undefined,
-    proteinPer100g: item.proteinPer100g ?? undefined,
-    carbsPer100g: item.carbsPer100g ?? undefined,
-    fatPer100g: item.fatPer100g ?? undefined,
-    fiberPer100g: item.fiberPer100g ?? undefined,
-    sugarPer100g: item.sugarPer100g ?? undefined,
-  }
-}
 
 export function useIngredientSearch() {
   const { locale } = useI18n()
@@ -36,7 +12,7 @@ export function useIngredientSearch() {
     ingredientsStore.load()
   }
 
-  const results = ref<IngredientSuggestion[]>([])
+  const results = ref<FoodItem[]>([])
   // Reflect store loading state so IngredientPicker shows spinner during DB fetch
   const loading = computed(() => ingredientsStore.loading)
 
@@ -63,7 +39,6 @@ export function useIngredientSearch() {
         return 0
       })
       .slice(0, 15)
-      .map(item => mapToSuggestion(item, lang))
   }
 
   function clear() {
