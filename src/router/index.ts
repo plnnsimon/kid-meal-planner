@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/stores/auth.store'
+import { supabase } from '@/lib/supabase'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -69,6 +70,28 @@ const router = createRouter({
       component: () => import('@/views/SettingsView.vue'),
     },
     {
+      path: '/admin',
+      redirect: '/admin/users',
+      meta: { requiresAdmin: true },
+    },
+    {
+      path: '/admin',
+      component: () => import('@/views/admin/AdminLayout.vue'),
+      meta: { requiresAdmin: true },
+      children: [
+        {
+          path: 'users',
+          name: 'admin-users',
+          component: () => import('@/views/admin/AdminUsersView.vue'),
+        },
+        {
+          path: 'feedback',
+          name: 'admin-feedback',
+          component: () => import('@/views/admin/AdminFeedbackView.vue'),
+        },
+      ],
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import('@/views/LoginView.vue'),
@@ -86,6 +109,16 @@ router.beforeEach(async (to) => {
   }
   if (auth.isAuthenticated && to.name === 'login') {
     return { name: 'week-plan' }
+  }
+
+  if (to.meta.requiresAdmin) {
+    if (!auth.userId) return { path: '/' }
+    const { data } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', auth.userId)
+      .single()
+    if (data?.role !== 'admin') return { path: '/' }
   }
 })
 

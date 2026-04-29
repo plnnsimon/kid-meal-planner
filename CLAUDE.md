@@ -61,9 +61,10 @@ src/
     weekPlan.store.ts      # Week plan + meal slots CRUD (Supabase)
     profile.store.ts       # Public user profile CRUD (profiles table)
     friends.store.ts       # Friendships CRUD — send/accept/decline/remove
+    ingredients.store.ts   # Food items CRUD — common seed + user custom ingredients, tasted tracking
   composables/
     useAllergyCheck.ts     # Checks recipe allergens vs child profile
-    useIngredientSearch.ts # Autocomplete over common-ingredients.json
+    useIngredientSearch.ts # Autocomplete over ingredients store (DB + common-ingredients seed)
     useLocale.ts           # Locale switching helper (i18n)
     useShoppingList.ts     # Derives grouped shopping list from week plan
   components/

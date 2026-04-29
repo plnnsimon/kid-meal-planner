@@ -46,7 +46,7 @@ Submissions land in a Supabase table and are visible in the future admin panel.
 ## Phase 13 — Admin Panel
 
 **Goal:** A protected `/admin` section showing registered users, their roles, and
-lightweight activity (last login, recipe count, plan count).
+lightweight activity (for now just registrations, for future to track maybe some activity in service).
 
 ### DB
 - Add `role text check (role in ('user','admin')) default 'user'` to `profiles`.
@@ -63,8 +63,6 @@ lightweight activity (last login, recipe count, plan count).
 ### Event tracking
 - Fire `activity_events` inserts (non-blocking, fire-and-forget) in:
   - `auth.store.ts` → after successful login: `event = 'login'`
-  - `recipe.store.ts` → after create: `event = 'recipe_created'`
-  - `weekPlan.store.ts` → after save: `event = 'plan_saved'`
 
 ### Route guard
 - `router/index.ts` — add `requiresAdmin` meta; redirect non-admins to `/`.
@@ -81,7 +79,7 @@ lightweight activity (last login, recipe count, plan count).
   - Table: avatar, display name, email, role, recipes, plans, last login
   - Inline role toggle (user ↔ admin) — calls `setRole`
 - `src/views/admin/AdminFeedbackView.vue`
-  - List of feedback rows: type badge, message, user name, date
+  - List of feedback rows (from phase 12 but not yet implemented): type badge, message, user name, date
 
 ### BottomNav
 - Do **not** show BottomNav on `/admin/*` routes.

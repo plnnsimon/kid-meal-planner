@@ -190,3 +190,30 @@ export interface RecipeFavorite {
   recipeId: string
   createdAt: string
 }
+
+// ─── Admin / Feedback ─────────────────────────────────────────────────────────
+
+export type UserRole = 'user' | 'admin'
+export type FeedbackType = 'bug' | 'feature'
+
+export interface AdminUser {
+  id: string
+  displayName: string
+  email: string
+  role: UserRole
+  avatarUrl: string | null
+  createdAt: string
+  recipeCount: number
+  planCount: number
+  lastLogin: string | null
+}
+
+export interface Feedback {
+  id: string
+  userId: string
+  type: FeedbackType
+  message: string
+  rating: number | null
+  createdAt: string
+  userDisplayName: string
+}

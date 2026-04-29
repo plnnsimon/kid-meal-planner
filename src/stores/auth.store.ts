@@ -41,8 +41,13 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   async function login(email: string, password: string, rememberMe: boolean) {
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
+
+    // Fire-and-forget login activity event
+    if (data.user?.id) {
+      supabase.from('activity_events').insert({ user_id: data.user.id, event: 'login' }).then(() => {})
+    }
 
     if (rememberMe) {
       localStorage.setItem(REMEMBER_KEY, 'true')
