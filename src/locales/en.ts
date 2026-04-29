@@ -153,6 +153,7 @@ export default {
     saved: 'Saved!',
     saveProfile: 'Save Profile',
     logout: 'Log Out',
+    enterAdmin: 'Admin Panel',
     tastedIngredientsTitle: 'Tasted Ingredients',
   },
   tastedIngredients: {
@@ -276,6 +277,7 @@ export default {
   },
   admin: {
     title: 'Admin',
+    leaveAdmin: 'Back to App',
     users: 'Users',
     feedback: 'Feedback',
     usersTitle: 'All Users',

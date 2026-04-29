@@ -153,6 +153,7 @@ export default {
     saved: 'Збережено!',
     saveProfile: 'Зберегти профіль',
     logout: 'Вийти',
+    enterAdmin: 'Панель адміна',
     tastedIngredientsTitle: 'Введені продукти',
   },
   tastedIngredients: {
@@ -276,6 +277,7 @@ export default {
   },
   admin: {
     title: 'Адмін',
+    leaveAdmin: 'До застосунку',
     users: 'Користувачі',
     feedback: 'Відгуки',
     usersTitle: 'Усі користувачі',

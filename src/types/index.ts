@@ -168,6 +168,7 @@ export interface UserProfile {
   id: string
   displayName: string
   avatarUrl: string | null
+  role: UserRole
   createdAt: string
   updatedAt: string
 }

@@ -15,7 +15,13 @@ const displayName = auth.session?.user?.email ?? ''
     <!-- Top bar -->
     <div class="bg-gray-900 text-white px-4 h-14 flex items-center gap-4 shrink-0">
       <span class="text-lg font-bold">{{ t('admin.title') }}</span>
-      <span class="text-sm text-gray-400 ml-auto truncate">{{ displayName }}</span>
+      <span class="text-sm text-gray-400 truncate">{{ displayName }}</span>
+      <RouterLink
+        to="/plan"
+        class="ml-auto shrink-0 text-sm font-semibold text-gray-300 hover:text-white transition-colors"
+      >
+        ← {{ t('admin.leaveAdmin') }}
+      </RouterLink>
     </div>
 
     <!-- Tab nav -->

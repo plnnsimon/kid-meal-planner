@@ -98,6 +98,7 @@ export const useProfileStore = defineStore('profile', () => {
       id: row.id,
       displayName: row.display_name ?? '',
       avatarUrl: row.avatar_url ?? null,
+      role: row.role ?? 'user',
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     }

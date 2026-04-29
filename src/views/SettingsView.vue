@@ -396,6 +396,15 @@ async function save() {
         {{ t('settings.saveProfile') }}
       </AppButton>
 
+      <!-- ── Admin button ───────────────────────────────────────────────────── -->
+      <RouterLink
+        v-if="profile.profile?.role === 'admin'"
+        to="/admin"
+        class="flex items-center justify-center w-full h-11 rounded-xl bg-gray-900 text-white text-sm font-semibold"
+      >
+        {{ t('settings.enterAdmin') }}
+      </RouterLink>
+
       <!-- ── Logout button ──────────────────────────────────────────────────── -->
       <AppButton type="button" variant="danger" @click="logout">
         {{ t('settings.logout') }}
