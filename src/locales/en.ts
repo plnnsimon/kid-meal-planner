@@ -68,6 +68,22 @@ export default {
     delete: 'Delete',
     deleteConfirm: 'Tap again to delete',
   },
+  rating: {
+    myRating: 'My Rating',
+    count: '{count} ratings',
+    noRatings: 'No ratings yet',
+  },
+  explorer: {
+    title: 'Food Explorer',
+    progress: '{tried} of {total} ingredients tried',
+    milestones: {
+      firstTasteExplorer: 'First Taste Explorer',
+      curiousEater: 'Curious Eater',
+      flavorAdventurer: 'Flavor Adventurer',
+      nutritionChampion: 'Nutrition Champion',
+      masterFoodExplorer: 'Master Food Explorer',
+    },
+  },
   recipeForm: {
     addPhoto: 'Add recipe photo',
     nameLabel: 'Recipe name',
@@ -175,6 +191,7 @@ export default {
     tabFriends: 'Friends',
     tabRequests: 'Requests',
     tabFind: 'Find People',
+    tabLeaderboard: 'Leaderboard',
     emptyFriends: 'No friends yet. Find people in the Find People tab.',
     remove: 'Remove',
     emptyRequests: 'No pending requests.',
@@ -186,6 +203,9 @@ export default {
     addFriend: 'Add Friend',
     noUsers: 'No users found.',
     searchPrompt: 'Type a name to search.',
+    emptyLeaderboard: 'No leaderboard data yet.',
+    leaderboardSaved: '{count} saved',
+    leaderboardYou: 'you',
   },
   friendProfile: {
     loading: 'Loading profile\u2026',

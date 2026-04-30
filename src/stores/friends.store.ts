@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
-import type { Friendship, UserProfile, ChildProfile, WeekPlan } from '@/types'
+import type { Friendship, UserProfile, ChildProfile, WeekPlan, LeaderboardEntry } from '@/types'
 
 export const useFriendsStore = defineStore('friends', () => {
   const auth = useAuthStore()
@@ -11,6 +11,8 @@ export const useFriendsStore = defineStore('friends', () => {
   const pendingIncoming = ref<Friendship[]>([])
   // Outgoing pending requests (I am the requester, status = pending)
   const pendingOutgoing = ref<Friendship[]>([])
+  const leaderboard = ref<LeaderboardEntry[]>([])
+  const leaderboardLoading = ref(false)
   const loading = ref(false)
   const error = ref<string | null>(null)
 
@@ -262,12 +264,41 @@ export const useFriendsStore = defineStore('friends', () => {
           allergens: row.recipe.allergens ?? [],
           tags: row.recipe.tags ?? [],
           isFavorite: row.recipe.is_favorite ?? false,
+          avgRating: row.recipe.avg_rating ?? 0,
+          ratingsCount: row.recipe.ratings_count ?? 0,
           createdAt: row.recipe.created_at,
           updatedAt: row.recipe.updated_at,
         } : undefined,
         servings: row.servings ?? 1,
         notes: row.notes ?? '',
       })),
+    }
+  }
+
+  // ── Leaderboard ───────────────────────────────────────────────────────────────
+
+  async function loadLeaderboard(): Promise<void> {
+    if (!auth.userId) return
+    leaderboardLoading.value = true
+    error.value = null
+    try {
+      const { data, error: err } = await supabase
+        .rpc('get_leaderboard_for_friends', { p_user_id: auth.userId })
+      if (err) throw err
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      leaderboard.value = (data ?? []).map((row: any) => ({
+        userId: row.user_id,
+        displayName: row.display_name ?? '',
+        avatarUrl: row.avatar_url ?? null,
+        savedCount: row.saved_count ?? 0,
+        avgSavedRating: row.avg_saved_rating ?? 0,
+        score: row.score ?? 0,
+        rank: row.rank ?? 0,
+      }))
+    } catch (e) {
+      error.value = (e as Error).message
+    } finally {
+      leaderboardLoading.value = false
     }
   }
 
@@ -299,5 +330,8 @@ export const useFriendsStore = defineStore('friends', () => {
     hasPendingRequest,
     loadFriendChildProfile,
     loadFriendWeekPlan,
+    leaderboard,
+    leaderboardLoading,
+    loadLeaderboard,
   }
 })

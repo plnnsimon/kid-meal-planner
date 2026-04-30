@@ -203,6 +203,8 @@ export const useWeekPlanStore = defineStore('weekPlan', () => {
       allergens: r.allergens ?? [],
       tags: r.tags ?? [],
       isFavorite: r.is_favorite ?? false,
+      avgRating: r.avg_rating ?? 0,
+      ratingsCount: r.ratings_count ?? 0,
       createdAt: r.created_at,
       updatedAt: r.updated_at,
     }

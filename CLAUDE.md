@@ -61,10 +61,11 @@ src/
     weekPlan.store.ts      # Week plan + meal slots CRUD (Supabase)
     profile.store.ts       # Public user profile CRUD (profiles table)
     friends.store.ts       # Friendships CRUD — send/accept/decline/remove
-    ingredients.store.ts   # Food items CRUD — common seed + user custom ingredients, tasted tracking
+    ingredients.store.ts   # Food items CRUD — common seed + user custom ingredients, tasted tracking; explorationPercent + currentMilestone computed
     admin.store.ts         # Admin: load all users + feedback, setRole, setTier, setBlocked
     subscription.store.ts  # Subscription tier + AI usage tracking (isPro, generationsUsed/Limit)
     aiPlanner.store.ts     # AI meal chat — sends messages, tracks limit_reached error
+    ratings.store.ts       # Recipe ratings CRUD — upsert/remove own rating, getMyRating computed
   composables/
     useAllergyCheck.ts     # Checks recipe allergens vs child profile
     useIngredientSearch.ts # Autocomplete over ingredients store (DB + common-ingredients seed)
@@ -82,10 +83,11 @@ src/
     ui/
       ConfirmModal.vue     # Generic confirmation dialog — props: title, message, confirmLabel, cancelLabel, variant (danger|primary); emits confirm/cancel
     recipe/
-      RecipeCard.vue       # Grid card: photo, name, kcal, allergen badges
+      RecipeCard.vue       # Grid card: photo, name, kcal, allergen badges, avg rating
       RecipeForm.vue       # Full recipe create/edit form (v-model:RecipePayload)
       NutritionBadge.vue   # Calorie + macro coloured pills
       IngredientPicker.vue # Autocomplete ingredient input used in RecipeForm
+      StarRating.vue       # 5-star interactive/readonly component (sm/md sizes, emits 0 to remove)
     meal/
       MealSlotCard.vue     # Single meal slot — empty or filled; opens preview modal
       DayColumn.vue        # One day: 4 MealSlotCards + opens MealPickerModal
@@ -96,11 +98,11 @@ src/
   views/
     WeekPlanView.vue         # 7-day horizontal scroll, week nav arrows
     RecipeLibraryView.vue    # Grid + search/filter + FAB; shows bookmarked recipes
-    RecipeDetailView.vue     # Create / edit / delete recipe
+    RecipeDetailView.vue     # Create / edit / delete recipe; interactive star rating when editing existing
     ShoppingListView.vue     # Grouped shopping list derived from current week plan
-    SettingsView.vue         # Child profile, allergies, dietary restrictions, account, subscription info
+    SettingsView.vue         # Child profile, allergies, dietary restrictions, account, subscription info, food explorer progress
     LoginView.vue            # Login + register form (Supabase auth, active)
-    FriendsView.vue          # Friends list, pending requests, add-friend search
+    FriendsView.vue          # Friends list, pending requests, add-friend search, leaderboard tab
     FriendProfileView.vue    # Public profile of a friend
     FriendRecipeView.vue     # Read-only recipe detail from a friend's library
     AIPlannerView.vue        # AI meal assistant chat; shows usage counter + upgrade banner on limit
@@ -119,6 +121,8 @@ supabase/
     010_admin.sql            # admin role, is_admin(), get_admin_user_stats(), activity_events
     011_subscriptions.sql    # subscription_tier + tier_expires_at on profiles; ai_usage table; set_user_tier()
     012_user_blocking.sql    # is_blocked on profiles; set_user_blocked(); updated get_admin_user_stats()
+    013_feedback_read.sql    # is_read on feedback; admin UPDATE policy
+    014_gamification.sql     # recipe_ratings table; avg_rating/ratings_count trigger on recipes; get_leaderboard_for_friends() SECURITY DEFINER fn; RLS
 ```
 
 ---
@@ -212,6 +216,10 @@ export const useFooStore = defineStore('foo', () => {
 | 12 | Admin panel (user list, role/tier management, feedback view) | ✅ Done |
 | 13 | Subscriptions (Basic/Pro tiers, AI usage limits, subscription UI in Settings) | ✅ Done |
 | 14 | User blocking (admin block/unblock, auth guard on login + session restore) | ✅ Done |
+| 15 | Gamification DB (recipe_ratings, avg_rating trigger, get_leaderboard_for_friends fn) | ✅ Done |
+| 16 | Gamification stores (ratings.store, leaderboard in friends.store, explorationPercent in ingredients.store) | ✅ Done |
+| 17 | Gamification UI (StarRating component, RecipeCard/RecipeDetailView wiring, leaderboard tab, food explorer) | ✅ Done |
+| 18 | Gamification i18n (rating.*, explorer.*, friends.tabLeaderboard en+uk) | ✅ Done |
 
 ---
 

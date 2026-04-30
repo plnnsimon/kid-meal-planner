@@ -46,6 +46,8 @@ onMounted(async () => {
       allergens: data.allergens ?? [],
       tags: data.tags ?? [],
       isFavorite: data.is_favorite ?? false,
+      avgRating: data.avg_rating ?? 0,
+      ratingsCount: data.ratings_count ?? 0,
       createdAt: data.created_at,
       updatedAt: data.updated_at,
     }

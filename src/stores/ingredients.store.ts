@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
 import { useChildStore } from '@/stores/child.store'
@@ -225,5 +225,21 @@ export const useIngredientsStore = defineStore('ingredients', () => {
     }
   }
 
-  return { items, tastedIds, loading, saving, error, isLoaded, load, toggleTasted, addCustom, updateCustom, removeCustom, loadFriendTasted, adoptIngredient, isTastedByName }
+  const explorationPercent = computed((): number => {
+    const total = items.value.length
+    if (total === 0) return 0
+    return Math.round((tastedIds.value.size / total) * 100)
+  })
+
+  const currentMilestone = computed((): string | null => {
+    const pct = explorationPercent.value
+    if (pct >= 100) return 'masterFoodExplorer'
+    if (pct >= 75) return 'nutritionChampion'
+    if (pct >= 50) return 'flavorAdventurer'
+    if (pct >= 25) return 'curiousEater'
+    if (pct >= 10) return 'firstTasteExplorer'
+    return null
+  })
+
+  return { items, tastedIds, loading, saving, error, isLoaded, load, toggleTasted, addCustom, updateCustom, removeCustom, loadFriendTasted, adoptIngredient, isTastedByName, explorationPercent, currentMilestone }
 })

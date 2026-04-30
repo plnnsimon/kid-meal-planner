@@ -3,7 +3,9 @@ import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useRecipeStore, emptyPayload, type RecipePayload } from '@/stores/recipe.store'
+import { useRatingsStore } from '@/stores/ratings.store'
 import RecipeForm from '@/components/recipe/RecipeForm.vue'
+import StarRating from '@/components/recipe/StarRating.vue'
 
 const { t } = useI18n()
 
@@ -14,6 +16,9 @@ const recipeStore = useRecipeStore()
 const isNew = computed(() => route.name === 'recipe-new')
 const recipeId = computed(() => route.params.id as string | undefined)
 
+const ratings = useRatingsStore()
+const recipe = computed(() => recipeId.value ? recipeStore.getById(recipeId.value) : null)
+
 const form = ref<RecipePayload>(emptyPayload())
 const pendingImage = ref<File | null>(null)
 const deleteConfirm = ref(false)
@@ -22,22 +27,23 @@ onMounted(async () => {
   if (!isNew.value && recipeId.value) {
     // Ensure recipes are loaded
     if (!recipeStore.recipes.length) await recipeStore.load()
-    const recipe = recipeStore.getById(recipeId.value)
-    if (recipe) {
+    ratings.load()
+    const r = recipeStore.getById(recipeId.value)
+    if (r) {
       form.value = {
-        name: recipe.name,
-        description: recipe.description,
-        imageUrl: recipe.imageUrl,
-        mealTypes: [...recipe.mealTypes],
-        prepTime: recipe.prepTime,
-        cookTime: recipe.cookTime,
-        servings: recipe.servings,
-        nutrition: { ...recipe.nutrition },
-        ingredients: recipe.ingredients.map(i => ({ ...i })),
-        instructions: [...recipe.instructions],
-        allergens: [...recipe.allergens],
-        tags: [...recipe.tags],
-        isFavorite: recipe.isFavorite,
+        name: r.name,
+        description: r.description,
+        imageUrl: r.imageUrl,
+        mealTypes: [...r.mealTypes],
+        prepTime: r.prepTime,
+        cookTime: r.cookTime,
+        servings: r.servings,
+        nutrition: { ...r.nutrition },
+        ingredients: r.ingredients.map(i => ({ ...i })),
+        instructions: [...r.instructions],
+        allergens: [...r.allergens],
+        tags: [...r.tags],
+        isFavorite: r.isFavorite,
       }
     }
   }
@@ -65,6 +71,15 @@ async function handleSubmit() {
   }
 
   router.push({ name: 'recipe-library' })
+}
+
+async function handleRate(score: number) {
+  if (!recipeId.value) return
+  if (score === 0) {
+    await ratings.remove(recipeId.value)
+  } else {
+    await ratings.upsert(recipeId.value, score)
+  }
 }
 
 async function handleDelete() {
@@ -101,6 +116,21 @@ async function handleDelete() {
       >
         {{ deleteConfirm ? t('recipeDetail.deleteConfirm') : t('recipeDetail.delete') }}
       </button>
+    </div>
+
+    <!-- Rating section — only when viewing existing recipe -->
+    <div v-if="!isNew" class="bg-white rounded-2xl shadow-sm px-4 py-3 flex items-center justify-between">
+      <span class="text-sm text-gray-600">{{ t('rating.myRating') }}</span>
+      <div class="flex items-center gap-2">
+        <StarRating
+          :model-value="ratings.getMyRating(recipeId ?? '')"
+          size="md"
+          @update:model-value="handleRate"
+        />
+        <span v-if="recipe?.ratingsCount" class="text-xs text-gray-400">
+          {{ t('rating.count', { count: recipe.ratingsCount }) }}
+        </span>
+      </div>
     </div>
 
     <RecipeForm

@@ -126,6 +126,8 @@ export interface Recipe {
   allergens: string[]
   tags: string[]
   isFavorite: boolean
+  avgRating: number
+  ratingsCount: number
   createdAt: string
   updatedAt: string
 }
@@ -221,4 +223,26 @@ export interface Feedback {
   createdAt: string
   userDisplayName: string
   isRead: boolean
+}
+
+// ─── Recipe Ratings ───────────────────────────────────────────────────────────
+
+export interface RecipeRating {
+  userId: string
+  recipeId: string
+  score: number  // 1–5
+  createdAt: string
+  updatedAt: string
+}
+
+// ─── Leaderboard ──────────────────────────────────────────────────────────────
+
+export interface LeaderboardEntry {
+  userId: string
+  displayName: string
+  avatarUrl: string | null
+  savedCount: number
+  avgSavedRating: number
+  score: number
+  rank: number
 }

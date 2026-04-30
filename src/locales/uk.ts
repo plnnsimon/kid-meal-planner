@@ -68,6 +68,22 @@ export default {
     delete: 'Видалити',
     deleteConfirm: 'Натисніть ще раз для видалення',
   },
+  rating: {
+    myRating: 'Моя оцінка',
+    count: '{count} оцінок',
+    noRatings: 'Оцінок ще немає',
+  },
+  explorer: {
+    title: 'Дослідник їжі',
+    progress: '{tried} з {total} продуктів спробовано',
+    milestones: {
+      firstTasteExplorer: 'Перший дегустатор',
+      curiousEater: 'Допитливий їдець',
+      flavorAdventurer: 'Мисливець за смаками',
+      nutritionChampion: 'Чемпіон харчування',
+      masterFoodExplorer: 'Майстер дослідник їжі',
+    },
+  },
   recipeForm: {
     addPhoto: 'Додати фото рецепту',
     nameLabel: 'Назва рецепту',
@@ -175,6 +191,7 @@ export default {
     tabFriends: 'Друзі',
     tabRequests: 'Запити',
     tabFind: 'Знайти',
+    tabLeaderboard: 'Рейтинг',
     emptyFriends: 'Друзів поки немає. Шукайте у вкладці "Знайти".',
     remove: 'Видалити',
     emptyRequests: 'Немає запитів.',
@@ -186,6 +203,9 @@ export default {
     addFriend: 'Додати у друзі',
     noUsers: 'Користувачів не знайдено.',
     searchPrompt: "Введіть ім'я для пошуку.",
+    emptyLeaderboard: 'Даних рейтингу ще немає.',
+    leaderboardSaved: '{count} збережено',
+    leaderboardYou: 'ви',
   },
   friendProfile: {
     loading: 'Завантаження…',

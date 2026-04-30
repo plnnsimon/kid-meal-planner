@@ -5,6 +5,7 @@ import { useChildStore } from '@/stores/child.store'
 import { useProfileStore } from '@/stores/profile.store'
 import { useAuthStore } from '@/stores/auth.store'
 import { useSubscriptionStore } from '@/stores/subscription.store'
+import { useIngredientsStore } from '@/stores/ingredients.store'
 import { useRouter } from 'vue-router'
 
 const { t } = useI18n()
@@ -17,6 +18,7 @@ const child = useChildStore()
 const profile = useProfileStore()
 const auth = useAuthStore()
 const subscription = useSubscriptionStore()
+const ingredientsStore = useIngredientsStore()
 const router = useRouter()
 
 const showUpgradeInfo = ref(false)
@@ -69,6 +71,7 @@ onMounted(async () => {
   await child.load()
   await profile.loadOwn()
   await subscription.load()
+  if (!ingredientsStore.isLoaded) ingredientsStore.load()
   syncFromStore()
   syncProfileFromStore()
 })
@@ -153,6 +156,12 @@ const childAge = computed(() => {
   if (now.getDate() < birth.getDate()) months--
   if (months < 0) { years--; months += 12 }
   return { years, months }
+})
+
+const milestoneLabel = computed(() => {
+  const key = ingredientsStore.currentMilestone
+  if (!key) return null
+  return t(`explorer.milestones.${key}`)
 })
 
 // ── Save ──────────────────────────────────────────────────────────────────────
@@ -383,6 +392,27 @@ async function save() {
           <span class="text-sm font-medium text-gray-700 flex-1">{{ t('settings.tastedIngredientsTitle') }}</span>
           <FontAwesomeIcon icon="chevron-right" class="w-4 h-4 text-gray-400" />
         </RouterLink>
+      </section>
+
+      <!-- ── Food Explorer Progress ─────────────────────────────────────────── -->
+      <section v-if="child.profile" class="bg-white rounded-2xl shadow-sm p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <h2 class="text-sm font-semibold text-gray-700">{{ t('explorer.title') }}</h2>
+          <span v-if="milestoneLabel" class="text-xs text-amber-600 font-medium bg-amber-50 px-2 py-0.5 rounded-full">
+            {{ milestoneLabel }}
+          </span>
+        </div>
+        <div class="flex items-center justify-between text-xs text-gray-400">
+          <span>{{ t('explorer.progress', { tried: ingredientsStore.tastedIds.size, total: ingredientsStore.items.length }) }}</span>
+          <span class="font-semibold text-gray-700">{{ ingredientsStore.explorationPercent }}%</span>
+        </div>
+        <!-- Progress bar -->
+        <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+          <div
+            class="h-full bg-primary-500 rounded-full transition-all duration-500"
+            :style="{ width: ingredientsStore.explorationPercent + '%' }"
+          />
+        </div>
       </section>
 
       <!-- ── Subscription ─────────────────────────────────────────────────────────────── -->

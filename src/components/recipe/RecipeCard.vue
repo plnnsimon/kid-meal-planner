@@ -2,6 +2,7 @@
 import type { Recipe } from '@/types'
 import { MEAL_TYPE_LABELS } from '@/types'
 import NutritionBadge from './NutritionBadge.vue'
+import StarRating from './StarRating.vue'
 
 defineProps<{ recipe: Recipe; viewOnly?: boolean; saved?: boolean }>()
 defineEmits<{ click: []; favorite: []; delete: []; save: [] }>()
@@ -82,6 +83,12 @@ defineEmits<{ click: []; favorite: []; delete: []; save: [] }>()
 
       <!-- Nutrition -->
       <NutritionBadge :nutrition="recipe.nutrition" />
+
+      <!-- Rating -->
+      <div v-if="recipe.ratingsCount > 0" class="flex items-center gap-1">
+        <StarRating :model-value="recipe.avgRating" :readonly="true" size="sm" />
+        <span class="text-xs text-gray-400">{{ recipe.avgRating.toFixed(1) }} ({{ recipe.ratingsCount }})</span>
+      </div>
 
       <!-- Allergens -->
       <div v-if="recipe.allergens.length" class="flex flex-wrap gap-1">

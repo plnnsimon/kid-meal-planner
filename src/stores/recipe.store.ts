@@ -208,6 +208,8 @@ export const useRecipeStore = defineStore('recipe', () => {
       allergens: row.allergens ?? [],
       tags: row.tags ?? [],
       isFavorite: row.is_favorite ?? false,
+      avgRating: row.avg_rating ?? 0,
+      ratingsCount: row.ratings_count ?? 0,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
     }
