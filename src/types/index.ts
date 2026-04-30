@@ -220,4 +220,5 @@ export interface Feedback {
   rating: number | null
   createdAt: string
   userDisplayName: string
+  isRead: boolean
 }

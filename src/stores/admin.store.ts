@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { supabase } from '@/lib/supabase'
 import type { AdminUser, Feedback, UserRole } from '@/types'
 
@@ -27,6 +27,8 @@ export const useAdminStore = defineStore('admin', () => {
     }
   }
 
+  const unreadCount = computed(() => feedback.value.filter(f => !f.isRead).length)
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   function mapFeedback(row: any): Feedback {
     return {
@@ -37,6 +39,7 @@ export const useAdminStore = defineStore('admin', () => {
       rating: row.rating ?? null,
       createdAt: row.created_at,
       userDisplayName: row.profiles?.display_name ?? '',
+      isRead: row.is_read ?? false,
     }
   }
 
@@ -105,5 +108,26 @@ export const useAdminStore = defineStore('admin', () => {
     if (target) target.isBlocked = blocked
   }
 
-  return { users, feedback, loading, error, load, loadFeedback, setRole, setTier, setBlocked }
+  async function markRead(id: string): Promise<void> {
+    const { error: err } = await supabase
+      .from('feedback')
+      .update({ is_read: true })
+      .eq('id', id)
+    if (err) throw err
+    const item = feedback.value.find(f => f.id === id)
+    if (item) item.isRead = true
+  }
+
+  async function markAllRead(): Promise<void> {
+    const unreadIds = feedback.value.filter(f => !f.isRead).map(f => f.id)
+    if (!unreadIds.length) return
+    const { error: err } = await supabase
+      .from('feedback')
+      .update({ is_read: true })
+      .in('id', unreadIds)
+    if (err) throw err
+    feedback.value.forEach(f => { f.isRead = true })
+  }
+
+  return { users, feedback, unreadCount, loading, error, load, loadFeedback, setRole, setTier, setBlocked, markRead, markAllRead }
 })

@@ -326,5 +326,8 @@ export default {
     blockedLabel: 'Blocked',
     blockConfirm: 'Block this user? They will be signed out immediately.',
     blockedError: 'Your account has been blocked. Contact support.',
+    markRead: 'Mark as read',
+    markAllRead: 'Mark all read',
+    unreadBadge: '{count} unread',
   },
 }
