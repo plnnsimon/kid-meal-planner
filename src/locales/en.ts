@@ -63,6 +63,8 @@ export default {
   },
   weekPlan: {
     tapForToday: 'Tap for today',
+    noChildSelected: 'Add a child in Settings to start planning.',
+    goToSettings: 'Go to Settings',
   },
   recipeLibrary: {
     searchPlaceholder: 'Search recipes\u2026',
@@ -387,6 +389,15 @@ export default {
     ingredientSource: 'Source',
     ingredientSourceSystem: 'System',
     ingredientSourceUser: 'User',
+  },
+  child: {
+    sectionTitle: 'Children',
+    addChild: 'Add Child',
+    noChildren: 'Add your first child to start planning meals.',
+    deleteChild: 'Delete this child',
+    deleteConfirmTitle: 'Delete child?',
+    deleteConfirmMessage: 'This will permanently delete the child profile and all their meal plans.',
+    deleteConfirmButton: 'Delete',
   },
   birthday: {
     title: 'Happy Birthday, {name}! 🎂',

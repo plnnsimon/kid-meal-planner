@@ -83,6 +83,7 @@ src/
       ImageUpload.vue      # Tap-to-upload image area (circle or rect)
       FeedbackButton.vue   # Floating feedback trigger button
       FeedbackModal.vue    # Feedback submission modal
+      ChildCard.vue        # Avatar circle + name pill; active = orange ring; used in SettingsView + WeekPlanView switcher
     ui/
       ConfirmModal.vue     # Generic confirmation dialog — props: title, message, confirmLabel, cancelLabel, variant (danger|primary); emits confirm/cancel
       BirthdayModal.vue    # Birthday date-picker modal
@@ -141,6 +142,7 @@ supabase/
     013_feedback_read.sql    # is_read on feedback; admin UPDATE policy
     014_gamification.sql     # recipe_ratings table; avg_rating/ratings_count trigger on recipes; get_leaderboard_for_friends() SECURITY DEFINER fn; RLS
     015_ingredient_images.sql   # image_url column on ingredients; admin UPDATE policy; ingredient-images public storage bucket + RLS
+    016_multi_child.sql         # child_id FK on week_plans; backfill; new UNIQUE (child_id, week_start_date); index on child_profiles(user_id); updated RLS
 ```
 
 ---
@@ -240,6 +242,9 @@ export const useFooStore = defineStore('foo', () => {
 | 18 | Gamification i18n (rating.*, explorer.*, friends.tabLeaderboard en+uk) | ✅ Done |
 | 19 | Admin ingredients panel (CRUD, image upload, ingredient-images bucket, migration 015) | ✅ Done |
 | 20 | FriendsView refactor — extract tabs into components/friends/ (FriendsListTab, PendingRequestsTab, FindPeopleTab, LeaderboardTab) | ✅ Done |
+| 21 | Multi-child DB schema (016_multi_child.sql) + child.store.ts refactor + weekPlan/ingredients/allergyCheck/App.vue updates | ✅ Done |
+| 22 | Settings UI: ChildCard component + child list/add/edit/delete in SettingsView + i18n child.* keys | ✅ Done |
+| 23 | WeekPlanView child switcher (hidden for 1 child, empty state for 0) + ShoppingListView child name in header | ✅ Done |
 
 ---
 

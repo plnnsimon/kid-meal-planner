@@ -63,6 +63,8 @@ export default {
   },
   weekPlan: {
     tapForToday: 'Повернутися до сьогодні',
+    noChildSelected: 'Додайте дитину в налаштуваннях, щоб почати планування.',
+    goToSettings: 'Перейти до налаштувань',
   },
   recipeLibrary: {
     searchPlaceholder: 'Пошук рецептів…',
@@ -387,6 +389,15 @@ export default {
     ingredientSource: 'Джерело',
     ingredientSourceSystem: 'Системний',
     ingredientSourceUser: 'Користувацький',
+  },
+  child: {
+    sectionTitle: 'Діти',
+    addChild: 'Додати дитину',
+    noChildren: 'Додайте першу дитину, щоб розпочати планування харчування.',
+    deleteChild: 'Видалити дитину',
+    deleteConfirmTitle: 'Видалити дитину?',
+    deleteConfirmMessage: 'Профіль дитини та всі плани харчування будуть видалені назавжди.',
+    deleteConfirmButton: 'Видалити',
   },
   birthday: {
     title: 'З Днем Народження, {name}! 🎂',

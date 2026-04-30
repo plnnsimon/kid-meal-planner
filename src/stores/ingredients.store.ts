@@ -30,11 +30,11 @@ export const useIngredientsStore = defineStore('ingredients', () => {
       if (ingErr) throw ingErr
       items.value = (ingData ?? []).map(mapRow)
 
-      if (child.profile?.id) {
+      if (child.selectedChild?.id) {
         const { data: tastedData, error: tastedErr } = await supabase
           .from('child_tasted_ingredients')
           .select('ingredient_id')
-          .eq('child_profile_id', child.profile.id)
+          .eq('child_profile_id', child.selectedChild.id)
         if (tastedErr) throw tastedErr
         tastedIds.value = new Set((tastedData ?? []).map((r: { ingredient_id: string }) => r.ingredient_id))
       }
@@ -47,21 +47,21 @@ export const useIngredientsStore = defineStore('ingredients', () => {
   }
 
   async function toggleTasted(ingredientId: string) {
-    if (!child.profile?.id) return
+    if (!child.selectedChild?.id) return
     saving.value = true
     try {
       if (tastedIds.value.has(ingredientId)) {
         const { error: err } = await supabase
           .from('child_tasted_ingredients')
           .delete()
-          .eq('child_profile_id', child.profile.id)
+          .eq('child_profile_id', child.selectedChild.id)
           .eq('ingredient_id', ingredientId)
         if (err) throw err
         tastedIds.value = new Set([...tastedIds.value].filter(id => id !== ingredientId))
       } else {
         const { error: err } = await supabase
           .from('child_tasted_ingredients')
-          .insert({ child_profile_id: child.profile.id, ingredient_id: ingredientId })
+          .insert({ child_profile_id: child.selectedChild.id, ingredient_id: ingredientId })
         if (err) throw err
         tastedIds.value = new Set([...tastedIds.value, ingredientId])
       }

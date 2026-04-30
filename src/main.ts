@@ -19,6 +19,8 @@ import {
   faRobot,
   faHeadset,
   faUser,
+  faPlus,
+  faChild,
 } from '@fortawesome/free-solid-svg-icons'
 
 import App from './App.vue'
@@ -43,6 +45,8 @@ library.add(
   faRobot,
   faHeadset,
   faUser,
+  faPlus,
+  faChild,
 )
 
 const app = createApp(App)

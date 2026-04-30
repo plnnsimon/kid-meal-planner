@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
+import { useChildStore } from '@/stores/child.store'
 import type { WeekPlan, MealSlot, MealType, Recipe } from '@/types'
 
 // Returns the Monday of the week containing `date`
@@ -28,6 +29,7 @@ export const DAY_LABELS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 export const useWeekPlanStore = defineStore('weekPlan', () => {
   const auth = useAuthStore()
+  const childStore = useChildStore()
 
   const plan = ref<WeekPlan | null>(null)
   const currentWeekStart = ref<Date>(weekStart())
@@ -64,6 +66,10 @@ export const useWeekPlanStore = defineStore('weekPlan', () => {
 
   async function load() {
     if (!auth.userId) return
+    if (!childStore.selectedChildId) {
+      plan.value = null
+      return
+    }
     loading.value = true
     error.value = null
     try {
@@ -73,14 +79,14 @@ export const useWeekPlanStore = defineStore('weekPlan', () => {
       let { data: planRow } = await supabase
         .from('week_plans')
         .select('*')
-        .eq('user_id', auth.userId)
+        .eq('child_id', childStore.selectedChildId)
         .eq('week_start_date', dateStr)
         .maybeSingle()
 
       if (!planRow) {
         const { data, error: err } = await supabase
           .from('week_plans')
-          .insert({ user_id: auth.userId, week_start_date: dateStr })
+          .insert({ user_id: auth.userId, child_id: childStore.selectedChildId, week_start_date: dateStr })
           .select()
           .single()
         if (err) throw err
@@ -209,6 +215,9 @@ export const useWeekPlanStore = defineStore('weekPlan', () => {
       updatedAt: r.updated_at,
     }
   }
+
+  // Reload when the selected child changes
+  watch(() => childStore.selectedChildId, () => { load() })
 
   return {
     plan, loading, error, currentWeekStart, weekLabel,

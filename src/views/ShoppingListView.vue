@@ -2,6 +2,7 @@
 import { onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useWeekPlanStore } from '@/stores/weekPlan.store'
+import { useChildStore } from '@/stores/child.store'
 import { useShoppingList } from '@/composables/useShoppingList'
 import ShoppingGroupSection from '@/components/shopping/ShoppingGroupSection.vue'
 import type { IngredientCategory } from '@/types'
@@ -20,6 +21,7 @@ const CATEGORY_ORDER: IngredientCategory[] = [
 ]
 
 const weekPlanStore = useWeekPlanStore()
+const childStore = useChildStore()
 const { groupedItems, checkedIds, toggle, clearChecked, totalItems, checkedCount } = useShoppingList()
 
 onMounted(() => {
@@ -35,7 +37,12 @@ onMounted(() => {
     <!-- Header -->
     <div class="px-4 pt-4 pb-3 flex items-center justify-between gap-3">
       <div class="flex items-baseline gap-2">
-        <h1 class="text-xl font-bold text-gray-900">{{ t('shoppingList.title') }}</h1>
+        <h1 class="text-xl font-bold text-gray-900">
+          {{ t('shoppingList.title') }}
+          <span v-if="childStore.selectedChild" class="text-base font-normal text-gray-500">
+            · {{ childStore.selectedChild.name }}
+          </span>
+        </h1>
         <span class="text-sm text-gray-500">
           {{ t('common.items', { n: totalItems }) }}
           <template v-if="checkedCount > 0"> · {{ t('common.checked', { n: checkedCount }) }}</template>

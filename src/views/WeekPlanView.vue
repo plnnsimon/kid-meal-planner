@@ -2,11 +2,14 @@
 import { onMounted, computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useWeekPlanStore } from '@/stores/weekPlan.store'
+import { useChildStore } from '@/stores/child.store'
 import DayColumn from '@/components/meal/DayColumn.vue'
+import ChildCard from '@/components/common/ChildCard.vue'
 
 const { t } = useI18n()
 
 const weekPlan = useWeekPlanStore()
+const childStore = useChildStore()
 
 onMounted(() => weekPlan.load())
 
@@ -47,6 +50,20 @@ const weekDays = computed(() =>
       </button>
     </div>
 
+    <!-- Child switcher — visible only when 2+ children -->
+    <div
+      v-if="childStore.children.length > 1"
+      class="flex gap-1 overflow-x-auto px-3 py-2 bg-white border-b border-gray-100 shrink-0"
+    >
+      <ChildCard
+        v-for="c in childStore.children"
+        :key="c.id"
+        :child="c"
+        :active="c.id === childStore.selectedChildId"
+        @select="childStore.select(c.id)"
+      />
+    </div>
+
     <!-- Loading -->
     <div v-if="weekPlan.loading" class="flex-1 flex items-center justify-center">
       <div class="w-8 h-8 border-2 border-primary-500 border-t-transparent rounded-full animate-spin" />
@@ -55,6 +72,15 @@ const weekDays = computed(() =>
     <!-- Error -->
     <div v-else-if="weekPlan.error" class="m-4 bg-red-50 text-red-600 text-sm rounded-xl px-4 py-3">
       {{ weekPlan.error }}
+    </div>
+
+    <!-- No child empty state -->
+    <div v-else-if="!weekPlan.plan" class="flex-1 flex flex-col items-center justify-center text-gray-400 gap-3 p-8">
+      <FontAwesomeIcon icon="child" class="w-16 h-16" />
+      <p class="text-base font-medium text-gray-500">{{ t('weekPlan.noChildSelected') }}</p>
+      <RouterLink to="/settings" class="text-sm text-primary-500 font-medium">
+        {{ t('weekPlan.goToSettings') }}
+      </RouterLink>
     </div>
 
     <!-- 7-day horizontal scroll grid -->

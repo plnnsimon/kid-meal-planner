@@ -18,6 +18,7 @@ const route = useRoute()
 
 const showBirthdayModal = ref(false)
 const birthdayWhen = ref<'today' | 'yesterday'>('today')
+const birthdayChildName = ref('')
 
 function getBirthdayStatus(birthDateStr: string): 'today' | 'yesterday' | null {
   const birth = new Date(birthDateStr)
@@ -31,16 +32,19 @@ function getBirthdayStatus(birthDateStr: string): 'today' | 'yesterday' | null {
 }
 
 function checkBirthday() {
-  const child = childStore.profile
-  if (!child?.birthDate || !child.id) return
-  const status = getBirthdayStatus(child.birthDate)
-  if (!status) return
-  const key = `birthday_modal_${child.id}`
-  const stored = localStorage.getItem(key)
-  if (stored && Date.now() - parseInt(stored, 10) < 7 * 24 * 60 * 60 * 1000) return
-  birthdayWhen.value = status
-  showBirthdayModal.value = true
-  localStorage.setItem(key, Date.now().toString())
+  for (const child of childStore.children) {
+    if (!child.birthDate || !child.id) continue
+    const status = getBirthdayStatus(child.birthDate)
+    if (!status) continue
+    const key = `birthday_modal_${child.id}`
+    const stored = localStorage.getItem(key)
+    if (stored && Date.now() - parseInt(stored, 10) < 7 * 24 * 60 * 60 * 1000) continue
+    birthdayWhen.value = status
+    birthdayChildName.value = child.name
+    showBirthdayModal.value = true
+    localStorage.setItem(key, Date.now().toString())
+    break
+  }
 }
 
 auth.init().then(async () => {
@@ -63,8 +67,8 @@ auth.init().then(async () => {
       <BottomNav v-if="route.name !== 'login' && !route.meta.requiresAdmin" />
       <FeedbackButton v-if="auth.isAuthenticated && route.name !== 'login' && !route.meta.requiresAdmin" />
       <BirthdayModal
-        v-if="showBirthdayModal && childStore.profile"
-        :child-name="childStore.profile.name"
+        v-if="showBirthdayModal && birthdayChildName"
+        :child-name="birthdayChildName"
         :when="birthdayWhen"
         @close="showBirthdayModal = false"
       />
