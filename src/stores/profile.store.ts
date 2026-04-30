@@ -62,10 +62,11 @@ export const useProfileStore = defineStore('profile', () => {
   // ── Search ───────────────────────────────────────────────────────────────────
 
   async function search(query: string): Promise<UserProfile[]> {
+    const pattern = `%${query}%`
     const { data, error: err } = await supabase
       .from('profiles')
       .select('*')
-      .ilike('display_name', `%${query}%`)
+      .or(`display_name.ilike.${pattern},email.ilike.${pattern}`)
       .limit(20)
 
     if (err) throw err

@@ -12,6 +12,19 @@ export function useAdminUsers() {
 
   onMounted(() => adminStore.load())
 
+  // ─── Search ──────────────────────────────────────────────────────────────────
+
+  const searchQuery = ref('')
+
+  const filteredUsers = computed(() => {
+    const q = searchQuery.value.trim().toLowerCase()
+    if (!q) return adminStore.users
+    return adminStore.users.filter(u =>
+      u.displayName.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q),
+    )
+  })
+
   // ─── Table ──────────────────────────────────────────────────────────────────
 
   const columns = computed<TableColumn[]>(() => [
@@ -95,9 +108,10 @@ export function useAdminUsers() {
 
   return {
     // store state
-    users: computed(() => adminStore.users),
+    users: filteredUsers,
     loading: computed(() => adminStore.loading),
     error: computed(() => adminStore.error),
+    searchQuery,
     // table
     columns,
     rowClass,

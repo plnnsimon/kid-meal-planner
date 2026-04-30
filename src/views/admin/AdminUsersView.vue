@@ -7,6 +7,7 @@ import { useAdminUsers } from '@/composables/useAdminUsers'
 const { t } = useI18n()
 const {
   users, loading, error,
+  searchQuery,
   columns, rowClass, formatDate,
   handleRoleChange,
   tierEditMap, handleTierChange, applyTier,
@@ -17,6 +18,13 @@ const {
 <template>
   <div class="p-4">
     <h1 class="text-xl font-bold text-gray-900 mb-4">{{ t('admin.usersTitle') }}</h1>
+
+    <input
+      v-model="searchQuery"
+      type="search"
+      :placeholder="t('admin.searchPlaceholder')"
+      class="w-full mb-4 rounded-xl border border-gray-200 px-3 py-2 text-sm outline-none focus:border-primary-400 bg-white"
+    />
 
     <DataTable
       :columns="columns"

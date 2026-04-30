@@ -50,7 +50,7 @@ src/
     cookieStorage.ts       # Cookie-backed GoTrueClient storage adapter
   vite-env.d.ts            # Vite ImportMeta types
   main.ts                  # App entry — createApp, Pinia, Router, i18n
-  App.vue                  # Shell: AppHeader + RouterView + BottomNav
+  App.vue                  # Shell: AppHeader + RouterView + BottomNav; loads pendingIncoming on auth init
   router/index.ts          # Routes + auth guard (active)
   data/
     common-ingredients.json  # Seed list for ingredient autocomplete
@@ -59,7 +59,7 @@ src/
     child.store.ts         # Child profile CRUD (Supabase)
     recipe.store.ts        # Recipe CRUD + image upload (Supabase Storage)
     weekPlan.store.ts      # Week plan + meal slots CRUD (Supabase)
-    profile.store.ts       # Public user profile CRUD (profiles table)
+    profile.store.ts       # Public user profile CRUD (profiles table); search() filters by display_name OR email
     friends.store.ts       # Friendships CRUD — send/accept/decline/remove
     ingredients.store.ts   # Food items CRUD — common seed + user custom ingredients, tasted tracking; explorationPercent + currentMilestone computed
     admin.store.ts         # Admin: load all users + feedback, setRole, setTier, setBlocked
@@ -74,7 +74,7 @@ src/
   components/
     layout/
       AppHeader.vue        # Sticky header; shows back arrow on sub-pages
-      BottomNav.vue        # 4-tab fixed bottom nav (Plan/Recipes/Shopping/Settings)
+      BottomNav.vue        # 5-tab fixed bottom nav (Plan/Recipes/Shopping/Friends/Settings); badge on Friends tab for pending requests
     common/
       AllergyChip.vue      # Toggleable pill chip (active = orange)
       AppButton.vue        # Reusable button with primary/secondary variants
@@ -102,13 +102,13 @@ src/
     ShoppingListView.vue     # Grouped shopping list derived from current week plan
     SettingsView.vue         # Child profile, allergies, dietary restrictions, account, subscription info, food explorer progress
     LoginView.vue            # Login + register form (Supabase auth, active)
-    FriendsView.vue          # Friends list, pending requests, add-friend search, leaderboard tab
+    FriendsView.vue          # Friends list, pending requests, add-friend search (name+email), leaderboard tab
     FriendProfileView.vue    # Public profile of a friend
     FriendRecipeView.vue     # Read-only recipe detail from a friend's library
     AIPlannerView.vue        # AI meal assistant chat; shows usage counter + upgrade banner on limit
     admin/
       AdminLayout.vue        # Admin shell with nav
-      AdminUsersView.vue     # User table — role/tier/block controls
+      AdminUsersView.vue     # User table — name/email search filter, role/tier/block controls
       AdminFeedbackView.vue  # Feedback list
 supabase/
   migrations/

@@ -155,7 +155,23 @@ const childAge = computed(() => {
   let months = now.getMonth() - birth.getMonth()
   if (now.getDate() < birth.getDate()) months--
   if (months < 0) { years--; months += 12 }
-  return { years, months }
+  const refDate = new Date(birth)
+  refDate.setFullYear(refDate.getFullYear() + years)
+  refDate.setMonth(refDate.getMonth() + months)
+  const days = Math.floor((now.getTime() - refDate.getTime()) / (1000 * 60 * 60 * 24))
+  return { years, months, days }
+})
+
+const childAgeText = computed(() => {
+  if (!childAge.value) return null
+  const { years, months, days } = childAge.value
+  if (years > 0 && months > 0 && days > 0) return t('settings.ageYearsMonthsDays', { years, months, days })
+  if (years > 0 && months > 0) return t('settings.ageYearsMonths', { years, months })
+  if (years > 0 && days > 0) return t('settings.ageYearsDays', { years, days })
+  if (years > 0) return t('settings.ageYearsOnly', { years })
+  if (months > 0 && days > 0) return t('settings.ageMonthsDays', { months, days })
+  if (months > 0) return t('settings.ageMonthsOnly', { months })
+  return t('settings.ageDaysOnly', { days })
 })
 
 const milestoneLabel = computed(() => {
@@ -276,18 +292,10 @@ async function save() {
             class="flex-1 text-sm text-gray-900 bg-transparent outline-none"
           />
           <span
-            v-if="childAge"
+            v-if="childAgeText"
             class="shrink-0 text-xs font-medium text-primary-600 bg-primary-50 rounded-full px-2 py-0.5"
           >
-            <template v-if="childAge.years > 0 && childAge.months > 0">
-              {{ t('settings.ageYearsMonths', { years: childAge.years, months: childAge.months }) }}
-            </template>
-            <template v-else-if="childAge.years > 0">
-              {{ t('settings.ageYearsOnly', { years: childAge.years }) }}
-            </template>
-            <template v-else>
-              {{ t('settings.ageMonthsOnly', { months: childAge.months }) }}
-            </template>
+            {{ childAgeText }}
           </span>
         </div>
       </section>
