@@ -67,7 +67,7 @@ export default {
   recipeLibrary: {
     searchPlaceholder: 'Пошук рецептів…',
     filterAll: 'Всі',
-    filterSaved: '♥ Збережені',
+    filterSaved: '♥ Улюблені',
     filterBookmarked: '🔖 Збережені',
     emptyNoRecipes: 'Рецептів поки немає',
     emptyFilter: 'Спробуйте інший фільтр',

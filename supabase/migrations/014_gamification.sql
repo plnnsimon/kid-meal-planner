@@ -20,7 +20,7 @@ CREATE TABLE IF NOT EXISTS recipe_ratings (
 -- ─── C. Trigger to keep avg_rating and ratings_count up to date ───────────────
 
 CREATE OR REPLACE FUNCTION refresh_recipe_rating()
-RETURNS TRIGGER LANGUAGE plpgsql AS $$
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
 DECLARE
   v_recipe_id UUID;
 BEGIN

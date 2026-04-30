@@ -5,13 +5,16 @@ import { useI18n } from 'vue-i18n'
 import { supabase } from '@/lib/supabase'
 import { useRecipeStore } from '@/stores/recipe.store'
 import { useIngredientsStore } from '@/stores/ingredients.store'
+import { useRatingsStore } from '@/stores/ratings.store'
 import NutritionBadge from '@/components/recipe/NutritionBadge.vue'
+import StarRating from '@/components/recipe/StarRating.vue'
 import type { Recipe } from '@/types'
 
 const route = useRoute()
 const { t } = useI18n()
 const recipeStore = useRecipeStore()
 const ingredients = useIngredientsStore()
+const ratings = useRatingsStore()
 
 const friendId = route.params.friendId as string
 const recipeId = route.params.recipeId as string
@@ -54,8 +57,28 @@ onMounted(async () => {
   }
 
   await recipeStore.loadFavoriteIds()
+  await ratings.load()
   loading.value = false
 })
+
+async function handleRate(score: number) {
+  if (!recipe.value) return
+  if (score === 0) {
+    await ratings.remove(recipe.value.id)
+  } else {
+    await ratings.upsert(recipe.value.id, score)
+  }
+  // refresh avg from DB
+  const { data } = await supabase
+    .from('recipes')
+    .select('avg_rating, ratings_count')
+    .eq('id', recipe.value.id)
+    .single()
+  if (data && recipe.value) {
+    recipe.value.avgRating = data.avg_rating ?? 0
+    recipe.value.ratingsCount = data.ratings_count ?? 0
+  }
+}
 
 function toggleSave() {
   if (!recipe.value) return
@@ -126,6 +149,24 @@ function toggleSave() {
         <p v-if="recipe.description" class="text-sm text-gray-600 leading-relaxed">
           {{ recipe.description }}
         </p>
+
+        <!-- Rating -->
+        <div class="flex items-center gap-3">
+          <div class="flex flex-col gap-0.5">
+            <span class="text-xs text-gray-500">{{ t('rating.myRating') }}</span>
+            <StarRating
+              :model-value="ratings.getMyRating(recipe.id)"
+              size="md"
+              @update:model-value="handleRate"
+            />
+          </div>
+          <div class="text-sm text-gray-500">
+            <span v-if="recipe.ratingsCount">
+              ★ {{ recipe.avgRating.toFixed(1) }} · {{ t('rating.count', { count: recipe.ratingsCount }) }}
+            </span>
+            <span v-else class="text-xs">{{ t('rating.noRatings') }}</span>
+          </div>
+        </div>
 
         <!-- Nutrition -->
         <NutritionBadge :nutrition="recipe.nutrition" />
