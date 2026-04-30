@@ -40,6 +40,13 @@ const displayName = auth.session?.user?.email ?? ''
       >
         {{ t('admin.feedback') }}
       </RouterLink>
+      <RouterLink
+        to="/admin/ingredients"
+        class="flex-1 text-center py-3 text-sm font-semibold transition-colors"
+        :class="route.path === '/admin/ingredients' ? 'text-primary-500 border-b-2 border-primary-500' : 'text-gray-500'"
+      >
+        {{ t('admin.ingredientsTitle') }}
+      </RouterLink>
     </nav>
 
     <!-- Content -->

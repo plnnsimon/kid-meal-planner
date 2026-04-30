@@ -89,6 +89,11 @@ const router = createRouter({
           name: 'admin-feedback',
           component: () => import('@/views/admin/AdminFeedbackView.vue'),
         },
+        {
+          path: 'ingredients',
+          name: 'admin-ingredients',
+          component: () => import('@/views/admin/AdminIngredientsView.vue'),
+        },
       ],
     },
     {

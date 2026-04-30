@@ -82,6 +82,7 @@ export interface FoodItem {
   fatPer100g: number | null
   fiberPer100g: number | null
   sugarPer100g: number | null
+  imageUrl?: string | null
   createdAt: string
 }
 

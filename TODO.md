@@ -84,21 +84,3 @@ Existing users (created before Phase 15 goes live) receive a permanent Pro flag
 
 ---
 
-## Execution order
-
-```
-Phase 12 → Phase 13 → Phase 14 → Phase 15
-```
-
-Phase 14 depends on Phase 15 only for the Pro gate — the AI itself can be built
-first and gated in a follow-up pass once Stripe is wired.
-
-## Open decisions (resolve before starting each phase)
-
-| Phase | Decision needed |
-|---|---|
-| 13 | Who gets the first admin role? (set manually in Supabase dashboard) |
-| 14 | `ANTHROPIC_API_KEY` — add to Supabase project secrets before deploying functions |
-| 15 | Stripe account, product ID, and price ID — needed before Edge Functions are coded |
-| 15 | Monthly price point |
-| 15 | Which existing users get `is_legacy_pro = true`? |

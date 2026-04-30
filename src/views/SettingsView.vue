@@ -9,6 +9,15 @@ import { useIngredientsStore } from '@/stores/ingredients.store'
 import { useRouter } from 'vue-router'
 
 const { t } = useI18n()
+
+function tAllergen(a: string): string {
+  return t('allergens.' + a, a)
+}
+
+function tDiet(preset: string): string {
+  const key = preset.replace(/\s+(\w)/g, (_, c: string) => c.toUpperCase())
+  return t('dietaryRestrictions.' + key, preset)
+}
 import AllergyChip from '@/components/common/AllergyChip.vue'
 import ImageUpload from '@/components/common/ImageUpload.vue'
 import AppButton from '@/components/common/AppButton.vue'
@@ -309,7 +318,7 @@ async function save() {
           <AllergyChip
             v-for="allergen in COMMON_ALLERGENS"
             :key="allergen"
-            :label="allergen"
+            :label="tAllergen(allergen)"
             :active="allergies.includes(allergen)"
             @toggle="toggleAllergen(allergen)"
           />
@@ -356,7 +365,7 @@ async function save() {
           <AllergyChip
             v-for="preset in DIETARY_RESTRICTION_PRESETS"
             :key="preset"
-            :label="preset"
+            :label="tDiet(preset)"
             :active="dietaryRestrictions.includes(preset)"
             @toggle="toggleDiet(preset)"
           />

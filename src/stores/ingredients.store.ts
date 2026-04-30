@@ -221,7 +221,136 @@ export const useIngredientsStore = defineStore('ingredients', () => {
       fatPer100g: row.fat_per_100g ?? null,
       fiberPer100g: row.fiber_per_100g ?? null,
       sugarPer100g: row.sugar_per_100g ?? null,
+      imageUrl: row.image_url ?? null,
       createdAt: row.created_at,
+    }
+  }
+
+  async function adminCreate(payload: {
+    name: string
+    nameUk: string | null
+    category: IngredientCategory
+    caloriesPer100g: number | null
+    proteinPer100g: number | null
+    carbsPer100g: number | null
+    fatPer100g: number | null
+    fiberPer100g: number | null
+    sugarPer100g: number | null
+    imageUrl?: string | null
+  }): Promise<void> {
+    saving.value = true
+    error.value = null
+    try {
+      const { error: err } = await supabase
+        .from('ingredients')
+        .insert({
+          name: payload.name.trim(),
+          name_uk: payload.nameUk?.trim() || null,
+          category: payload.category,
+          source: 'system',
+          user_id: null,
+          calories_per_100g: payload.caloriesPer100g,
+          protein_per_100g: payload.proteinPer100g,
+          carbs_per_100g: payload.carbsPer100g,
+          fat_per_100g: payload.fatPer100g,
+          fiber_per_100g: payload.fiberPer100g,
+          sugar_per_100g: payload.sugarPer100g,
+          image_url: payload.imageUrl ?? null,
+        })
+      if (err) throw err
+      await load()
+    } catch (e) {
+      error.value = (e as Error).message
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function adminUpdate(
+    id: string,
+    payload: Partial<{
+      name: string
+      nameUk: string | null
+      category: IngredientCategory
+      caloriesPer100g: number | null
+      proteinPer100g: number | null
+      carbsPer100g: number | null
+      fatPer100g: number | null
+      fiberPer100g: number | null
+      sugarPer100g: number | null
+      imageUrl: string | null
+    }>
+  ): Promise<void> {
+    saving.value = true
+    error.value = null
+    try {
+      const dbPayload: Record<string, unknown> = {}
+      if (payload.name !== undefined) dbPayload.name = payload.name.trim()
+      if (payload.nameUk !== undefined) dbPayload.name_uk = payload.nameUk?.trim() || null
+      if (payload.category !== undefined) dbPayload.category = payload.category
+      if (payload.caloriesPer100g !== undefined) dbPayload.calories_per_100g = payload.caloriesPer100g
+      if (payload.proteinPer100g !== undefined) dbPayload.protein_per_100g = payload.proteinPer100g
+      if (payload.carbsPer100g !== undefined) dbPayload.carbs_per_100g = payload.carbsPer100g
+      if (payload.fatPer100g !== undefined) dbPayload.fat_per_100g = payload.fatPer100g
+      if (payload.fiberPer100g !== undefined) dbPayload.fiber_per_100g = payload.fiberPer100g
+      if (payload.sugarPer100g !== undefined) dbPayload.sugar_per_100g = payload.sugarPer100g
+      if (payload.imageUrl !== undefined) dbPayload.image_url = payload.imageUrl
+
+      const { data, error: err } = await supabase
+        .from('ingredients')
+        .update(dbPayload)
+        .eq('id', id)
+        .select()
+        .single()
+      if (err) throw err
+      items.value = items.value.map(i => i.id === id ? mapRow(data) : i)
+    } catch (e) {
+      error.value = (e as Error).message
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function adminDelete(id: string): Promise<void> {
+    saving.value = true
+    error.value = null
+    try {
+      const { error: err } = await supabase
+        .from('ingredients')
+        .delete()
+        .eq('id', id)
+      if (err) throw err
+      items.value = items.value.filter(i => i.id !== id)
+    } catch (e) {
+      error.value = (e as Error).message
+      throw e
+    } finally {
+      saving.value = false
+    }
+  }
+
+  async function adminUploadImage(ingredientId: string, file: File): Promise<string> {
+    saving.value = true
+    error.value = null
+    try {
+      const path = `${ingredientId}/${file.name}`
+      const { error: uploadErr } = await supabase.storage
+        .from('ingredient-images')
+        .upload(path, file, { upsert: true })
+      if (uploadErr) throw uploadErr
+      const { data: urlData } = supabase.storage
+        .from('ingredient-images')
+        .getPublicUrl(path)
+      const publicUrl = urlData.publicUrl
+      await adminUpdate(ingredientId, { imageUrl: publicUrl })
+      return publicUrl
+    } catch (e) {
+      error.value = (e as Error).message
+      throw e
+    } finally {
+      saving.value = false
     }
   }
 
@@ -241,5 +370,5 @@ export const useIngredientsStore = defineStore('ingredients', () => {
     return null
   })
 
-  return { items, tastedIds, loading, saving, error, isLoaded, load, toggleTasted, addCustom, updateCustom, removeCustom, loadFriendTasted, adoptIngredient, isTastedByName, explorationPercent, currentMilestone }
+  return { items, tastedIds, loading, saving, error, isLoaded, load, toggleTasted, addCustom, updateCustom, removeCustom, loadFriendTasted, adoptIngredient, isTastedByName, explorationPercent, currentMilestone, adminCreate, adminUpdate, adminDelete, adminUploadImage }
 })

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n'
 import type { Recipe } from '@/types'
 import { MEAL_TYPE_LABELS } from '@/types'
 import NutritionBadge from './NutritionBadge.vue'
@@ -6,6 +7,8 @@ import StarRating from './StarRating.vue'
 
 defineProps<{ recipe: Recipe; viewOnly?: boolean; saved?: boolean }>()
 defineEmits<{ click: []; favorite: []; delete: []; save: [] }>()
+
+const { t } = useI18n()
 </script>
 
 <template>
@@ -97,7 +100,7 @@ defineEmits<{ click: []; favorite: []; delete: []; save: [] }>()
           :key="a"
           class="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200"
         >
-          ⚠️ {{ a }}
+          ⚠️ {{ t('allergens.' + a, a) }}
         </span>
       </div>
     </div>

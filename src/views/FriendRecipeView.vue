@@ -137,7 +137,7 @@ function toggleSave() {
             :key="a"
             class="text-xs px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200"
           >
-            ⚠️ {{ a }}
+            ⚠️ {{ t('allergens.' + a, a) }}
           </span>
         </div>
       </div>
