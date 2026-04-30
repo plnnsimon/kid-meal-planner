@@ -11,6 +11,8 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 }
 
+const BASIC_MONTHLY_LIMIT = 10
+
 async function runWithClaude(
   messages: Array<{ role: 'user' | 'assistant'; content: string }>,
   systemPrompt: string,
@@ -109,6 +111,65 @@ Deno.serve(async (req: Request) => {
       { global: { headers: { Authorization: authHeader } } },
     )
 
+    // Service role client — bypasses RLS for usage tracking
+    const serviceSupabase = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
+    )
+
+    // Subscription gate
+    const { data: profileRow } = await serviceSupabase
+      .from('profiles')
+      .select('subscription_tier, tier_expires_at')
+      .eq('id', userId)
+      .maybeSingle()
+
+    const now = new Date()
+    const isPro =
+      profileRow?.subscription_tier === 'pro' &&
+      (profileRow?.tier_expires_at == null || new Date(profileRow.tier_expires_at) > now)
+
+    let periodStart = ''
+    let used = 0
+
+    if (!isPro) {
+      periodStart = new Date(now.getFullYear(), now.getMonth(), 1)
+        .toISOString()
+        .split('T')[0]
+
+      // Upsert row for this month (insert if missing, do nothing if exists)
+      await serviceSupabase
+        .from('ai_usage')
+        .upsert(
+          { user_id: userId, period_start: periodStart, generation_count: 0 },
+          { onConflict: 'user_id,period_start', ignoreDuplicates: true },
+        )
+
+      // Read current count
+      const { data: usageRow } = await serviceSupabase
+        .from('ai_usage')
+        .select('generation_count')
+        .eq('user_id', userId)
+        .eq('period_start', periodStart)
+        .single()
+
+      used = usageRow?.generation_count ?? 0
+
+      if (used >= BASIC_MONTHLY_LIMIT) {
+        return new Response(
+          JSON.stringify({ error: 'limit_reached', used, limit: BASIC_MONTHLY_LIMIT }),
+          { status: 402, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } },
+        )
+      }
+
+      // Increment before calling LLM
+      await serviceSupabase
+        .from('ai_usage')
+        .update({ generation_count: used + 1 })
+        .eq('user_id', userId)
+        .eq('period_start', periodStart)
+    }
+
     // Load child profile server-side
     const { data: childRow } = await supabase
       .from('child_profiles')
@@ -156,11 +217,23 @@ Deno.serve(async (req: Request) => {
       )
     }
 
-    const finalText = groqKey
-      ? await runWithGroq(messages, systemPrompt, toolDefinitions, executeTool, groqKey)
-      : anthropicKey
-        ? await runWithClaude(messages, systemPrompt, executeTool, anthropicKey)
-        : await runWithGemini(messages, systemPrompt, toolDefinitions, executeTool, googleKey!)
+    let finalText: string
+    try {
+      finalText = groqKey
+        ? await runWithGroq(messages, systemPrompt, toolDefinitions, executeTool, groqKey)
+        : anthropicKey
+          ? await runWithClaude(messages, systemPrompt, executeTool, anthropicKey)
+          : await runWithGemini(messages, systemPrompt, toolDefinitions, executeTool, googleKey!)
+    } catch (llmErr) {
+      if (!isPro) {
+        await serviceSupabase
+          .from('ai_usage')
+          .update({ generation_count: used })
+          .eq('user_id', userId)
+          .eq('period_start', periodStart)
+      }
+      throw llmErr
+    }
 
     return new Response(
       JSON.stringify({ message: finalText }),

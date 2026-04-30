@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useAdminStore } from '@/stores/admin.store'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 import type { UserRole } from '@/types'
 
 const { t } = useI18n()
@@ -19,6 +20,54 @@ function formatDate(date: string | null): string {
 function handleRoleChange(userId: string, event: Event) {
   const role = (event.target as HTMLSelectElement).value as UserRole
   adminStore.setRole(userId, role)
+}
+
+const tierEditMap = ref<Record<string, { tier: 'basic' | 'pro'; expiryMode: 'unlimited' | 'date'; expiresAt: string }>>({})
+
+function getDefaultExpiry(): string {
+  const d = new Date()
+  d.setMonth(d.getMonth() + 1)
+  return d.toISOString().split('T')[0]
+}
+
+function handleTierChange(userId: string, event: Event) {
+  const tier = (event.target as HTMLSelectElement).value as 'basic' | 'pro'
+  const user = adminStore.users.find(u => u.id === userId)
+  if (!user) return
+  const currentExpiry = user.tierExpiresAt ? user.tierExpiresAt.split('T')[0] : getDefaultExpiry()
+  const expiryMode = user.tierExpiresAt === null && user.subscriptionTier === 'pro' ? 'unlimited' : 'date'
+  tierEditMap.value[userId] = {
+    tier,
+    expiryMode: tier === 'basic' ? 'date' : expiryMode,
+    expiresAt: currentExpiry,
+  }
+}
+
+const blockConfirm = ref<{ userId: string; currentlyBlocked: boolean } | null>(null)
+
+function toggleBlock(userId: string, currentlyBlocked: boolean) {
+  if (currentlyBlocked) {
+    adminStore.setBlocked(userId, false)
+    return
+  }
+  blockConfirm.value = { userId, currentlyBlocked }
+}
+
+async function confirmBlock() {
+  if (!blockConfirm.value) return
+  await adminStore.setBlocked(blockConfirm.value.userId, true)
+  blockConfirm.value = null
+}
+
+async function applyTier(userId: string) {
+  const edit = tierEditMap.value[userId]
+  if (!edit) return
+  let expiresAt: string | null = null
+  if (edit.tier === 'pro' && edit.expiryMode === 'date') {
+    expiresAt = new Date(edit.expiresAt).toISOString()
+  }
+  await adminStore.setTier(userId, edit.tier, expiresAt)
+  delete tierEditMap.value[userId]
 }
 </script>
 
@@ -56,6 +105,9 @@ function handleRoleChange(userId: string, event: Event) {
               {{ t('admin.colRole') }}
             </th>
             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              {{ t('admin.colTier') }}
+            </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
               {{ t('admin.colRecipes') }}
             </th>
             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
@@ -64,10 +116,13 @@ function handleRoleChange(userId: string, event: Event) {
             <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
               {{ t('admin.colLastLogin') }}
             </th>
+            <th class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wide">
+              {{ t('admin.blockedLabel') }}
+            </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-100">
-          <tr v-for="user in adminStore.users" :key="user.id">
+          <tr v-for="user in adminStore.users" :key="user.id" :class="user.isBlocked ? 'opacity-60 bg-red-50' : ''">
             <td class="px-4 py-3 text-sm">
               <div class="flex items-center gap-2">
                 <img
@@ -93,12 +148,114 @@ function handleRoleChange(userId: string, event: Event) {
                 <option value="admin">{{ t('admin.roleAdmin') }}</option>
               </select>
             </td>
+            <td class="px-4 py-3 text-sm">
+              <template v-if="!tierEditMap[user.id]">
+                <!-- Static badge -->
+                <div class="flex items-center gap-2">
+                  <span
+                    :class="user.subscriptionTier === 'pro'
+                      ? 'bg-primary-50 text-primary-600'
+                      : 'bg-gray-100 text-gray-600'"
+                    class="text-xs font-semibold px-2 py-0.5 rounded-full"
+                  >
+                    {{ user.subscriptionTier === 'pro' ? t('subscription.proLabel') : t('subscription.basicLabel') }}
+                  </span>
+                  <span v-if="user.subscriptionTier === 'pro'" class="text-xs text-gray-400">
+                    {{ user.tierExpiresAt ? formatDate(user.tierExpiresAt) : '∞' }}
+                  </span>
+                  <select
+                    :value="user.subscriptionTier"
+                    class="text-xs rounded-lg border border-gray-200 px-2 py-1 outline-none focus:border-primary-400 bg-white"
+                    @change="handleTierChange(user.id, $event)"
+                  >
+                    <option value="basic">{{ t('subscription.basicLabel') }}</option>
+                    <option value="pro">{{ t('subscription.proLabel') }}</option>
+                  </select>
+                </div>
+              </template>
+              <template v-else>
+                <div class="flex flex-col gap-1 min-w-[160px]">
+                  <!-- Tier select -->
+                  <select
+                    :value="tierEditMap[user.id].tier"
+                    class="text-xs rounded-lg border border-gray-200 px-2 py-1 outline-none focus:border-primary-400 bg-white"
+                    @change="handleTierChange(user.id, $event)"
+                  >
+                    <option value="basic">{{ t('subscription.basicLabel') }}</option>
+                    <option value="pro">{{ t('subscription.proLabel') }}</option>
+                  </select>
+
+                  <!-- Expiry mode (Pro only) -->
+                  <template v-if="tierEditMap[user.id].tier === 'pro'">
+                    <div class="flex gap-2 text-xs">
+                      <label class="flex items-center gap-1 cursor-pointer">
+                        <input
+                          type="radio"
+                          :name="`expiry-${user.id}`"
+                          value="unlimited"
+                          :checked="tierEditMap[user.id].expiryMode === 'unlimited'"
+                          @change="tierEditMap[user.id].expiryMode = 'unlimited'"
+                        />
+                        {{ t('admin.tierUnlimited') }}
+                      </label>
+                      <label class="flex items-center gap-1 cursor-pointer">
+                        <input
+                          type="radio"
+                          :name="`expiry-${user.id}`"
+                          value="date"
+                          :checked="tierEditMap[user.id].expiryMode === 'date'"
+                          @change="tierEditMap[user.id].expiryMode = 'date'"
+                        />
+                        {{ t('admin.tierUntilDate') }}
+                      </label>
+                    </div>
+                    <input
+                      v-if="tierEditMap[user.id].expiryMode === 'date'"
+                      v-model="tierEditMap[user.id].expiresAt"
+                      type="date"
+                      class="text-xs rounded-lg border border-gray-200 px-2 py-1 outline-none focus:border-primary-400"
+                    />
+                  </template>
+
+                  <button
+                    type="button"
+                    class="text-xs bg-primary-500 text-white rounded-lg px-3 py-1 font-semibold min-h-[32px]"
+                    @click="applyTier(user.id)"
+                  >
+                    {{ t('admin.applyTier') }}
+                  </button>
+                </div>
+              </template>
+            </td>
             <td class="px-4 py-3 text-sm text-gray-600">{{ user.recipeCount }}</td>
             <td class="px-4 py-3 text-sm text-gray-600">{{ user.planCount }}</td>
             <td class="px-4 py-3 text-sm text-gray-600">{{ formatDate(user.lastLogin) }}</td>
+            <td class="px-4 py-3 text-sm">
+              <button
+                type="button"
+                :class="user.isBlocked
+                  ? 'bg-gray-100 text-gray-700 hover:bg-green-50 hover:text-green-700'
+                  : 'bg-red-50 text-red-600 hover:bg-red-100'"
+                class="text-xs font-semibold px-3 py-1 rounded-lg min-h-[32px] transition-colors"
+                @click="toggleBlock(user.id, user.isBlocked)"
+              >
+                {{ user.isBlocked ? t('admin.unblockUser') : t('admin.blockUser') }}
+              </button>
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
+
+  <ConfirmModal
+    v-if="blockConfirm"
+    :title="t('admin.blockUser')"
+    :message="t('admin.blockConfirm')"
+    :confirm-label="t('admin.blockUser')"
+    :cancel-label="t('common.cancel')"
+    variant="danger"
+    @confirm="confirmBlock"
+    @cancel="blockConfirm = null"
+  />
 </template>

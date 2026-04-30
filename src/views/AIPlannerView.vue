@@ -1,13 +1,16 @@
 <script setup lang="ts">
 import { ref, watch, nextTick, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { RouterLink } from 'vue-router'
 import { useAIPlannerStore } from '@/stores/aiPlanner.store'
 import { useWeekPlanStore } from '@/stores/weekPlan.store'
+import { useSubscriptionStore } from '@/stores/subscription.store'
 
 const { t } = useI18n()
 
 const store = useAIPlannerStore()
 const weekPlanStore = useWeekPlanStore()
+const subscriptionStore = useSubscriptionStore()
 
 const inputText = ref('')
 const messagesEl = ref<HTMLDivElement | null>(null)
@@ -104,8 +107,26 @@ async function send() {
 
     </div>
 
-    <!-- Error banner -->
-    <div v-if="store.error" class="bg-red-50 text-red-600 text-sm px-4 py-3 border-t border-red-100">
+    <!-- Usage badge (Basic only) -->
+    <div v-if="!subscriptionStore.isPro" class="px-4 pt-2 pb-0 flex justify-end">
+      <span class="text-xs text-gray-400">
+        {{ t('subscription.usageCounter', { used: subscriptionStore.generationsUsed, limit: subscriptionStore.generationsLimit }) }}
+      </span>
+    </div>
+
+    <!-- Upgrade banner (limit reached) -->
+    <div
+      v-if="store.error === 'limit_reached'"
+      class="bg-amber-50 border-t border-amber-100 px-4 py-3 text-sm text-amber-800"
+    >
+      <p class="font-medium">{{ t('subscription.limitReached', { limit: subscriptionStore.generationsLimit }) }}</p>
+      <RouterLink to="/settings" class="text-primary-500 font-medium underline text-xs mt-1 inline-block">
+        {{ t('subscription.upgradeCta') }}
+      </RouterLink>
+    </div>
+
+    <!-- Generic error banner (non-limit errors only) -->
+    <div v-else-if="store.error" class="bg-red-50 text-red-600 text-sm px-4 py-3 border-t border-red-100">
       {{ store.error }}
     </div>
 
@@ -121,7 +142,7 @@ async function send() {
       />
       <button
         type="button"
-        :disabled="store.loading || !inputText.trim()"
+        :disabled="store.loading || !inputText.trim() || store.error === 'limit_reached'"
         class="w-11 h-11 rounded-full bg-primary-500 text-white flex items-center justify-center shrink-0 disabled:opacity-40 transition-opacity"
         @click="send"
       >

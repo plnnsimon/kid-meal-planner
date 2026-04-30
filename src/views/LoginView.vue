@@ -1,12 +1,14 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth.store'
 import AppInput from '@/components/common/AppInput.vue'
 import AppButton from '@/components/common/AppButton.vue'
 
 const auth = useAuthStore()
 const router = useRouter()
+const { t } = useI18n()
 
 const mode = ref<'login' | 'register'>('login')
 const email = ref('')
@@ -74,7 +76,8 @@ async function submit() {
     }
     router.push('/plan')
   } catch (e) {
-    error.value = (e as Error).message
+    const msg = (e as Error).message
+    error.value = msg === 'account_blocked' ? t('admin.blockedError') : msg
   } finally {
     loading.value = false
   }

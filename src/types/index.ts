@@ -207,6 +207,9 @@ export interface AdminUser {
   recipeCount: number
   planCount: number
   lastLogin: string | null
+  subscriptionTier: 'basic' | 'pro'
+  tierExpiresAt: string | null
+  isBlocked: boolean
 }
 
 export interface Feedback {

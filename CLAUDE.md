@@ -55,13 +55,16 @@ src/
   data/
     common-ingredients.json  # Seed list for ingredient autocomplete
   stores/
-    auth.store.ts          # Real Supabase auth — login/register/logout, session init
+    auth.store.ts          # Real Supabase auth — login/register/logout, session init; blocks blocked users on login + session restore
     child.store.ts         # Child profile CRUD (Supabase)
     recipe.store.ts        # Recipe CRUD + image upload (Supabase Storage)
     weekPlan.store.ts      # Week plan + meal slots CRUD (Supabase)
     profile.store.ts       # Public user profile CRUD (profiles table)
     friends.store.ts       # Friendships CRUD — send/accept/decline/remove
     ingredients.store.ts   # Food items CRUD — common seed + user custom ingredients, tasted tracking
+    admin.store.ts         # Admin: load all users + feedback, setRole, setTier, setBlocked
+    subscription.store.ts  # Subscription tier + AI usage tracking (isPro, generationsUsed/Limit)
+    aiPlanner.store.ts     # AI meal chat — sends messages, tracks limit_reached error
   composables/
     useAllergyCheck.ts     # Checks recipe allergens vs child profile
     useIngredientSearch.ts # Autocomplete over ingredients store (DB + common-ingredients seed)
@@ -76,6 +79,8 @@ src/
       AppButton.vue        # Reusable button with primary/secondary variants
       AppInput.vue         # Reusable text input with label + error slot
       ImageUpload.vue      # Tap-to-upload image area (circle or rect)
+    ui/
+      ConfirmModal.vue     # Generic confirmation dialog — props: title, message, confirmLabel, cancelLabel, variant (danger|primary); emits confirm/cancel
     recipe/
       RecipeCard.vue       # Grid card: photo, name, kcal, allergen badges
       RecipeForm.vue       # Full recipe create/edit form (v-model:RecipePayload)
@@ -93,11 +98,16 @@ src/
     RecipeLibraryView.vue    # Grid + search/filter + FAB; shows bookmarked recipes
     RecipeDetailView.vue     # Create / edit / delete recipe
     ShoppingListView.vue     # Grouped shopping list derived from current week plan
-    SettingsView.vue         # Child profile, allergies, dietary restrictions, account
+    SettingsView.vue         # Child profile, allergies, dietary restrictions, account, subscription info
     LoginView.vue            # Login + register form (Supabase auth, active)
     FriendsView.vue          # Friends list, pending requests, add-friend search
     FriendProfileView.vue    # Public profile of a friend
     FriendRecipeView.vue     # Read-only recipe detail from a friend's library
+    AIPlannerView.vue        # AI meal assistant chat; shows usage counter + upgrade banner on limit
+    admin/
+      AdminLayout.vue        # Admin shell with nav
+      AdminUsersView.vue     # User table — role/tier/block controls
+      AdminFeedbackView.vue  # Feedback list
 supabase/
   migrations/
     001_initial_schema.sql   # Core schema (recipes, week_plans, meal_slots, children)
@@ -105,6 +115,10 @@ supabase/
     003_profiles.sql         # profiles table (display_name, avatar_url, bio)
     004_friendships.sql      # friendships table (sender, receiver, status)
     005_social_rls.sql       # RLS for profiles + friendships + social recipe access
+    009_feedback.sql         # feedback table
+    010_admin.sql            # admin role, is_admin(), get_admin_user_stats(), activity_events
+    011_subscriptions.sql    # subscription_tier + tier_expires_at on profiles; ai_usage table; set_user_tier()
+    012_user_blocking.sql    # is_blocked on profiles; set_user_blocked(); updated get_admin_user_stats()
 ```
 
 ---
@@ -195,6 +209,9 @@ export const useFooStore = defineStore('foo', () => {
 | 9 | Friends system (friendships table, friends.store.ts, FriendsView, FriendProfileView) | ✅ Done |
 | 10 | Social content viewing + recipe bookmarks (FriendRecipeView, bookmarked recipes in picker) | ✅ Done |
 | 11 | i18n (vue-i18n, en + uk locales, locale switcher in Settings) | ✅ Done |
+| 12 | Admin panel (user list, role/tier management, feedback view) | ✅ Done |
+| 13 | Subscriptions (Basic/Pro tiers, AI usage limits, subscription UI in Settings) | ✅ Done |
+| 14 | User blocking (admin block/unblock, auth guard on login + session restore) | ✅ Done |
 
 ---
 

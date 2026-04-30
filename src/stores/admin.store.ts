@@ -21,6 +21,9 @@ export const useAdminStore = defineStore('admin', () => {
       recipeCount: Number(row.recipe_count ?? 0),
       planCount: Number(row.plan_count ?? 0),
       lastLogin: row.last_login ?? null,
+      subscriptionTier: (row.subscription_tier as 'basic' | 'pro') ?? 'basic',
+      tierExpiresAt: row.tier_expires_at ?? null,
+      isBlocked: row.is_blocked ?? false,
     }
   }
 
@@ -78,5 +81,29 @@ export const useAdminStore = defineStore('admin', () => {
     if (target) target.role = role
   }
 
-  return { users, feedback, loading, error, load, loadFeedback, setRole }
+  async function setTier(userId: string, tier: 'basic' | 'pro', expiresAt: string | null): Promise<void> {
+    const { error: err } = await supabase.rpc('set_user_tier', {
+      target_user_id: userId,
+      new_tier: tier,
+      new_expires_at: expiresAt,
+    })
+    if (err) throw err
+    const target = users.value.find(u => u.id === userId)
+    if (target) {
+      target.subscriptionTier = tier
+      target.tierExpiresAt = expiresAt
+    }
+  }
+
+  async function setBlocked(userId: string, blocked: boolean): Promise<void> {
+    const { error: err } = await supabase.rpc('set_user_blocked', {
+      target_user_id: userId,
+      blocked,
+    })
+    if (err) throw err
+    const target = users.value.find(u => u.id === userId)
+    if (target) target.isBlocked = blocked
+  }
+
+  return { users, feedback, loading, error, load, loadFeedback, setRole, setTier, setBlocked }
 })

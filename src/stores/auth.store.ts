@@ -26,10 +26,18 @@ export const useAuthStore = defineStore('auth', () => {
       const remembered = localStorage.getItem(REMEMBER_KEY) === 'true'
       const sessionOnly = sessionStorage.getItem(REMEMBER_KEY) === 'true'
       if (!remembered && !sessionOnly) {
-        // New browser session and user did not want to be remembered — clear it
         await supabase.auth.signOut()
       } else {
-        session.value = data.session
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('is_blocked')
+          .eq('id', data.session.user.id)
+          .single()
+        if (profile?.is_blocked) {
+          await supabase.auth.signOut()
+        } else {
+          session.value = data.session
+        }
       }
     }
 
@@ -43,6 +51,19 @@ export const useAuthStore = defineStore('auth', () => {
   async function login(email: string, password: string, rememberMe: boolean) {
     const { data, error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
+
+    // Check if blocked
+    if (data.user?.id) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('is_blocked')
+        .eq('id', data.user.id)
+        .single()
+      if (profile?.is_blocked) {
+        await supabase.auth.signOut()
+        throw new Error('account_blocked')
+      }
+    }
 
     // Fire-and-forget login activity event
     if (data.user?.id) {

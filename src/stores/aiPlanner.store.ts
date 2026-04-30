@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { supabase } from '@/lib/supabase'
 import { useAuthStore } from '@/stores/auth.store'
 import { useWeekPlanStore } from '@/stores/weekPlan.store'
+import { useSubscriptionStore } from '@/stores/subscription.store'
 
 export interface ChatMessage {
   role: 'user' | 'assistant'
@@ -34,10 +35,18 @@ export const useAIPlannerStore = defineStore('aiPlanner', () => {
     })
 
     if (fnErr) {
-      error.value = fnErr.message
+      let isLimitReached = false
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const body = await (fnErr as any).context?.json?.()
+        isLimitReached = body?.error === 'limit_reached'
+      } catch { /* ignore */ }
+      error.value = isLimitReached ? 'limit_reached' : fnErr.message
       messages.value.pop()
     } else {
       messages.value.push({ role: 'assistant', content: data.message })
+      const subscriptionStore = useSubscriptionStore()
+      await subscriptionStore.refresh()
     }
 
     loading.value = false

@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useChildStore } from '@/stores/child.store'
 import { useProfileStore } from '@/stores/profile.store'
 import { useAuthStore } from '@/stores/auth.store'
+import { useSubscriptionStore } from '@/stores/subscription.store'
 import { useRouter } from 'vue-router'
 
 const { t } = useI18n()
@@ -15,7 +16,14 @@ import { COMMON_ALLERGENS, DIETARY_RESTRICTION_PRESETS } from '@/types'
 const child = useChildStore()
 const profile = useProfileStore()
 const auth = useAuthStore()
+const subscription = useSubscriptionStore()
 const router = useRouter()
+
+const showUpgradeInfo = ref(false)
+
+function formatExpiry(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+}
 
 // ── Local form state ──────────────────────────────────────────────────────────
 
@@ -60,6 +68,7 @@ watch(() => child.profile, syncFromStore)
 onMounted(async () => {
   await child.load()
   await profile.loadOwn()
+  await subscription.load()
   syncFromStore()
   syncProfileFromStore()
 })
@@ -375,6 +384,64 @@ async function save() {
           <FontAwesomeIcon icon="chevron-right" class="w-4 h-4 text-gray-400" />
         </RouterLink>
       </section>
+
+      <!-- ── Subscription ─────────────────────────────────────────────────────────────── -->
+      <section class="bg-white rounded-2xl shadow-sm p-4 space-y-3">
+        <h2 class="text-sm font-semibold text-gray-700">{{ t('subscription.sectionTitle') }}</h2>
+
+        <div class="flex items-center justify-between">
+          <span class="text-sm text-gray-500">{{ t('subscription.planLabel') }}</span>
+          <span
+            :class="subscription.isPro
+              ? 'bg-primary-50 text-primary-600'
+              : 'bg-gray-100 text-gray-600'"
+            class="text-xs font-semibold px-2 py-0.5 rounded-full"
+          >
+            {{ subscription.isPro ? t('subscription.proLabel') : t('subscription.basicLabel') }}
+          </span>
+        </div>
+
+        <div v-if="subscription.isPro && subscription.tierExpiresAt" class="flex items-center justify-between">
+          <span class="text-sm text-gray-500">{{ t('subscription.expiresLabel') }}</span>
+          <span class="text-sm text-gray-700">{{ formatExpiry(subscription.tierExpiresAt) }}</span>
+        </div>
+
+        <div v-if="!subscription.isPro" class="flex items-center justify-between">
+          <span class="text-sm text-gray-500">{{ t('subscription.usageThisMonth') }}</span>
+          <span class="text-sm text-gray-700">
+            {{ t('subscription.usageCounter', { used: subscription.generationsUsed, limit: subscription.generationsLimit }) }}
+          </span>
+        </div>
+
+        <div v-if="!subscription.isPro" class="pt-1">
+          <button
+            type="button"
+            class="w-full h-11 rounded-xl bg-primary-500 text-white text-sm font-semibold"
+            @click="showUpgradeInfo = true"
+          >
+            {{ t('subscription.upgradeCta') }}
+          </button>
+        </div>
+      </section>
+
+      <!-- Upgrade info modal (placeholder) -->
+      <div
+        v-if="showUpgradeInfo"
+        class="fixed inset-0 bg-black/40 z-50 flex items-end justify-center"
+        @click.self="showUpgradeInfo = false"
+      >
+        <div class="bg-white rounded-t-2xl w-full max-w-lg p-6 space-y-4">
+          <h3 class="text-base font-semibold text-gray-900">{{ t('subscription.upgradeTitle') }}</h3>
+          <p class="text-sm text-gray-600">{{ t('subscription.upgradeBody') }}</p>
+          <button
+            type="button"
+            class="w-full h-11 rounded-xl bg-gray-100 text-gray-700 text-sm font-semibold"
+            @click="showUpgradeInfo = false"
+          >
+            {{ t('subscription.upgradeClose') }}
+          </button>
+        </div>
+      </div>
 
       <!-- ── Error ──────────────────────────────────────────────────────────── -->
       <div v-if="child.error" class="bg-red-50 text-red-600 text-sm rounded-xl px-4 py-3">

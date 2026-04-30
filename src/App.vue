@@ -4,11 +4,17 @@ import BottomNav from '@/components/layout/BottomNav.vue'
 import AppHeader from '@/components/layout/AppHeader.vue'
 import FeedbackButton from '@/components/common/FeedbackButton.vue'
 import { useAuthStore } from '@/stores/auth.store'
+import { useSubscriptionStore } from '@/stores/subscription.store'
 
 const auth = useAuthStore()
+const subscriptionStore = useSubscriptionStore()
 const route = useRoute()
 
-auth.init()
+auth.init().then(() => {
+  if (auth.isAuthenticated) {
+    subscriptionStore.load()
+  }
+})
 </script>
 
 <template>
