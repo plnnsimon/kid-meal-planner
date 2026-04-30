@@ -71,6 +71,7 @@ src/
     useIngredientSearch.ts # Autocomplete over ingredients store (DB + common-ingredients seed)
     useLocale.ts           # Locale switching helper (i18n)
     useShoppingList.ts     # Derives grouped shopping list from week plan
+    useAdminUsers.ts       # Admin users list logic — search filter, role/tier/block actions (extracted from AdminUsersView)
   components/
     layout/
       AppHeader.vue        # Sticky header; shows back arrow on sub-pages
@@ -80,8 +81,12 @@ src/
       AppButton.vue        # Reusable button with primary/secondary variants
       AppInput.vue         # Reusable text input with label + error slot
       ImageUpload.vue      # Tap-to-upload image area (circle or rect)
+      FeedbackButton.vue   # Floating feedback trigger button
+      FeedbackModal.vue    # Feedback submission modal
     ui/
       ConfirmModal.vue     # Generic confirmation dialog — props: title, message, confirmLabel, cancelLabel, variant (danger|primary); emits confirm/cancel
+      BirthdayModal.vue    # Birthday date-picker modal
+      DataTable.vue        # Generic data table with loading/error/empty states + named slots
     recipe/
       RecipeCard.vue       # Grid card: photo, name, kcal, allergen badges, avg rating
       RecipeForm.vue       # Full recipe create/edit form (v-model:RecipePayload)
@@ -95,6 +100,14 @@ src/
       RecipePreviewModal.vue  # Tap-on-slot modal: shows recipe details before removing
     shopping/
       ShoppingGroupSection.vue  # One collapsible group in the shopping list
+    friends/
+      FriendsListTab.vue       # Accepted friends list tab
+      PendingRequestsTab.vue   # Incoming/outgoing requests tab
+      FindPeopleTab.vue        # Search by name+email, send request tab
+      LeaderboardTab.vue       # Friends leaderboard tab
+    admin/
+      IngredientFormModal.vue  # Add/edit ingredient modal (name, category, image upload to ingredient-images bucket)
+      IngredientList.vue       # Searchable, filterable ingredient table for admin
   views/
     WeekPlanView.vue         # 7-day horizontal scroll, week nav arrows
     RecipeLibraryView.vue    # Grid + search/filter + FAB; shows bookmarked recipes
@@ -102,14 +115,15 @@ src/
     ShoppingListView.vue     # Grouped shopping list derived from current week plan
     SettingsView.vue         # Child profile, allergies, dietary restrictions, account, subscription info, food explorer progress
     LoginView.vue            # Login + register form (Supabase auth, active)
-    FriendsView.vue          # Friends list, pending requests, add-friend search (name+email), leaderboard tab
+    FriendsView.vue          # Tab shell for friends tabs (FriendsListTab, PendingRequestsTab, FindPeopleTab, LeaderboardTab)
     FriendProfileView.vue    # Public profile of a friend
     FriendRecipeView.vue     # Read-only recipe detail from a friend's library
     AIPlannerView.vue        # AI meal assistant chat; shows usage counter + upgrade banner on limit
     admin/
-      AdminLayout.vue        # Admin shell with nav
-      AdminUsersView.vue     # User table — name/email search filter, role/tier/block controls
-      AdminFeedbackView.vue  # Feedback list
+      AdminLayout.vue          # Admin shell with nav
+      AdminUsersView.vue       # User table — name/email search filter, role/tier/block controls
+      AdminFeedbackView.vue    # Feedback list with read/unread tracking
+      AdminIngredientsView.vue # Ingredient CRUD — search, category filter, add/edit modal, delete
 supabase/
   migrations/
     001_initial_schema.sql   # Core schema (recipes, week_plans, meal_slots, children)
@@ -117,12 +131,16 @@ supabase/
     003_profiles.sql         # profiles table (display_name, avatar_url, bio)
     004_friendships.sql      # friendships table (sender, receiver, status)
     005_social_rls.sql       # RLS for profiles + friendships + social recipe access
+    006_tasted_ingredients.sql  # tasted_ingredients table (user_id, ingredient_id)
+    007_ingredients_table.sql   # ingredients table (name, category, image_url); common seed data
+    008_friend_tasted_rls.sql   # RLS for tasted_ingredients + friend read access
     009_feedback.sql         # feedback table
     010_admin.sql            # admin role, is_admin(), get_admin_user_stats(), activity_events
     011_subscriptions.sql    # subscription_tier + tier_expires_at on profiles; ai_usage table; set_user_tier()
     012_user_blocking.sql    # is_blocked on profiles; set_user_blocked(); updated get_admin_user_stats()
     013_feedback_read.sql    # is_read on feedback; admin UPDATE policy
     014_gamification.sql     # recipe_ratings table; avg_rating/ratings_count trigger on recipes; get_leaderboard_for_friends() SECURITY DEFINER fn; RLS
+    015_ingredient_images.sql   # image_url column on ingredients; admin UPDATE policy; ingredient-images public storage bucket + RLS
 ```
 
 ---
@@ -151,7 +169,7 @@ const { data } = await supabase
   .select('*')
   .eq('user_id', auth.userId)
 
-// Storage — two buckets: 'recipe-images', 'child-avatars'
+// Storage — three buckets: 'recipe-images', 'child-avatars', 'ingredient-images'
 const { error } = await supabase.storage
   .from('recipe-images')
   .upload(path, file, { upsert: true })
@@ -220,6 +238,8 @@ export const useFooStore = defineStore('foo', () => {
 | 16 | Gamification stores (ratings.store, leaderboard in friends.store, explorationPercent in ingredients.store) | ✅ Done |
 | 17 | Gamification UI (StarRating component, RecipeCard/RecipeDetailView wiring, leaderboard tab, food explorer) | ✅ Done |
 | 18 | Gamification i18n (rating.*, explorer.*, friends.tabLeaderboard en+uk) | ✅ Done |
+| 19 | Admin ingredients panel (CRUD, image upload, ingredient-images bucket, migration 015) | ✅ Done |
+| 20 | FriendsView refactor — extract tabs into components/friends/ (FriendsListTab, PendingRequestsTab, FindPeopleTab, LeaderboardTab) | ✅ Done |
 
 ---
 

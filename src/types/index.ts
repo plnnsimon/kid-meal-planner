@@ -244,6 +244,8 @@ export interface LeaderboardEntry {
   avatarUrl: string | null
   savedCount: number
   avgSavedRating: number
+  ownRatingsCount: number
+  ownAvgRating: number
   score: number
   rank: number
 }

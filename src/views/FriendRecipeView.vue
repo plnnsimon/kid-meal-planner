@@ -150,24 +150,6 @@ function toggleSave() {
           {{ recipe.description }}
         </p>
 
-        <!-- Rating -->
-        <div class="flex items-center gap-3">
-          <div class="flex flex-col gap-0.5">
-            <span class="text-xs text-gray-500">{{ t('rating.myRating') }}</span>
-            <StarRating
-              :model-value="ratings.getMyRating(recipe.id)"
-              size="md"
-              @update:model-value="handleRate"
-            />
-          </div>
-          <div class="text-sm text-gray-500">
-            <span v-if="recipe.ratingsCount">
-              ★ {{ recipe.avgRating.toFixed(1) }} · {{ t('rating.count', { count: recipe.ratingsCount }) }}
-            </span>
-            <span v-else class="text-xs">{{ t('rating.noRatings') }}</span>
-          </div>
-        </div>
-
         <!-- Nutrition -->
         <NutritionBadge :nutrition="recipe.nutrition" />
 
@@ -181,6 +163,20 @@ function toggleSave() {
             ⚠️ {{ t('allergens.' + a, a) }}
           </span>
         </div>
+      </div>
+
+      <!-- Rating -->
+      <div class="bg-white rounded-2xl shadow-sm px-4 py-4 space-y-2">
+        <h3 class="text-sm font-semibold text-gray-700">{{ t('rating.myRating') }}</h3>
+        <StarRating
+          :model-value="ratings.getMyRating(recipe.id)"
+          size="md"
+          @update:model-value="handleRate"
+        />
+        <p v-if="recipe.ratingsCount" class="text-sm text-gray-500">
+          ★ {{ recipe.avgRating.toFixed(1) }} · {{ t('rating.count', { count: recipe.ratingsCount }) }}
+        </p>
+        <p v-else class="text-xs text-gray-400">{{ t('rating.noRatings') }}</p>
       </div>
 
       <!-- Ingredients -->

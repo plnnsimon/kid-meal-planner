@@ -292,6 +292,8 @@ export const useFriendsStore = defineStore('friends', () => {
         avatarUrl: row.avatar_url ?? null,
         savedCount: row.saved_count ?? 0,
         avgSavedRating: row.avg_saved_rating ?? 0,
+        ownRatingsCount: row.own_ratings_count ?? 0,
+        ownAvgRating: row.own_avg_rating ?? 0,
         score: row.score ?? 0,
         rank: row.rank ?? 0,
       }))

@@ -219,6 +219,9 @@ export default {
     emptyLeaderboard: 'Даних рейтингу ще немає.',
     leaderboardSaved: '{count} збережено',
     leaderboardYou: 'ви',
+    leaderboardRatings: '{count} оцінок',
+    leaderboardAvgRating: 'сер. {rating}★',
+    leaderboardNoRatings: 'ще немає оцінок',
   },
   friendProfile: {
     loading: 'Завантаження…',

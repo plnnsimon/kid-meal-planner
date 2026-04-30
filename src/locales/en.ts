@@ -219,6 +219,9 @@ export default {
     emptyLeaderboard: 'No leaderboard data yet.',
     leaderboardSaved: '{count} saved',
     leaderboardYou: 'you',
+    leaderboardRatings: '{count} ratings',
+    leaderboardAvgRating: 'avg {rating}★',
+    leaderboardNoRatings: 'no ratings yet',
   },
   friendProfile: {
     loading: 'Loading profile\u2026',
