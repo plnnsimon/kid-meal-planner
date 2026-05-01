@@ -79,6 +79,10 @@ export default {
     delete: 'Видалити',
     deleteConfirm: 'Натисніть ще раз для видалення',
   },
+  recipe: {
+    deleteTitle: 'Видалити рецепт?',
+    deleteConfirm: 'Цей рецепт буде назавжди видалено з вашої бібліотеки.',
+  },
   rating: {
     myRating: 'Моя оцінка',
     count: '{count} оцінок',
@@ -294,6 +298,7 @@ export default {
     servingLabel: '{n} порція | {n} порції | {n} порцій',
     cancel: 'Скасувати',
     confirm: 'Підтвердити',
+    delete: 'Видалити',
     edit: 'Редагувати',
     all: 'Всі',
   },
@@ -304,6 +309,18 @@ export default {
     thinking: 'Думаю...',
     clearHistory: 'Очистити',
     emptyState: 'Привіт! Я можу допомогти спланувати харчування дитини на цей тиждень. Що ви хотіли б зробити?',
+    quick: {
+      title: 'AI Швидка генерація',
+      week: 'Генерувати тиждень',
+      day: 'Генерувати день',
+      recipe: 'Генерувати 1 рецепт',
+      chat: 'Відкрити чат',
+      generating: 'Генерація...',
+      proRequired: 'Потрібен тариф Pro',
+      selectDay: 'День тижня',
+      selectMeal: 'Тип їжі',
+      generate: 'Генерувати',
+    },
   },
   feedback: {
     buttonTitle: 'Надіслати відгук',

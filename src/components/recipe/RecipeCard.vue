@@ -1,14 +1,17 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import type { Recipe } from '@/types'
 import { MEAL_TYPE_LABELS } from '@/types'
 import NutritionBadge from './NutritionBadge.vue'
 import StarRating from './StarRating.vue'
+import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 
 defineProps<{ recipe: Recipe; viewOnly?: boolean; saved?: boolean }>()
-defineEmits<{ click: []; favorite: []; delete: []; save: [] }>()
+const emit = defineEmits<{ click: []; favorite: []; delete: []; save: [] }>()
 
 const { t } = useI18n()
+const showDeleteConfirm = ref(false)
 </script>
 
 <template>
@@ -55,7 +58,7 @@ const { t } = useI18n()
         v-if="!viewOnly"
         type="button"
         class="absolute top-2 right-12 w-8 h-8 rounded-full bg-white/80 backdrop-blur flex items-center justify-center shadow-sm text-gray-400 hover:text-red-500"
-        @click.stop="$emit('delete')"
+        @click.stop="showDeleteConfirm = true"
       >
         🗑
       </button>
@@ -105,4 +108,15 @@ const { t } = useI18n()
       </div>
     </div>
   </div>
+
+  <ConfirmModal
+    v-if="showDeleteConfirm"
+    :title="t('recipe.deleteTitle')"
+    :message="t('recipe.deleteConfirm')"
+    :confirm-label="t('common.delete')"
+    :cancel-label="t('common.cancel')"
+    variant="danger"
+    @confirm="emit('delete'); showDeleteConfirm = false"
+    @cancel="showDeleteConfirm = false"
+  />
 </template>

@@ -9,6 +9,8 @@ import {
   faCheck,
   faCartShopping,
   faCalendarDays,
+  faCalendarWeek,
+  faCalendarDay,
   faBook,
   faUsers,
   faGear,
@@ -21,6 +23,11 @@ import {
   faUser,
   faPlus,
   faChild,
+  faXmark,
+  faCommentDots,
+  faLock,
+  faUtensils,
+  faSpinner,
 } from '@fortawesome/free-solid-svg-icons'
 
 import App from './App.vue'
@@ -35,6 +42,8 @@ library.add(
   faCheck,
   faCartShopping,
   faCalendarDays,
+  faCalendarWeek,
+  faCalendarDay,
   faBook,
   faUsers,
   faGear,
@@ -47,6 +56,11 @@ library.add(
   faUser,
   faPlus,
   faChild,
+  faXmark,
+  faCommentDots,
+  faLock,
+  faUtensils,
+  faSpinner,
 )
 
 const app = createApp(App)

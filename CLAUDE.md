@@ -245,6 +245,9 @@ export const useFooStore = defineStore('foo', () => {
 | 21 | Multi-child DB schema (016_multi_child.sql) + child.store.ts refactor + weekPlan/ingredients/allergyCheck/App.vue updates | ✅ Done |
 | 22 | Settings UI: ChildCard component + child list/add/edit/delete in SettingsView + i18n child.* keys | ✅ Done |
 | 23 | WeekPlanView child switcher (hidden for 1 child, empty state for 0) + ShoppingListView child name in header | ✅ Done |
+| 24 | AI Quick Generate — edge function `mode` field (quick_week/day/recipe) + Pro gate | ✅ Done |
+| 25 | AI Quick Generate — store `quickGenerate`, `AIPlannerSpeedDial`, `QuickGenerateModal`, WeekPlanView wired | ✅ Done |
+| 26 | AI Quick Generate i18n — `aiPlanner.quick.*` keys in en + uk | ✅ Done |
 
 ---
 

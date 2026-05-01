@@ -90,10 +90,20 @@ Deno.serve(async (req: Request) => {
 
   try {
     // Parse request body
-    const { messages, userId, weekPlanId } = await req.json() as {
-      messages: Array<{ role: 'user' | 'assistant'; content: string }>
+    const {
+      messages: rawMessages,
+      userId,
+      weekPlanId,
+      mode = 'chat',
+      dayOfWeek,
+      mealType,
+    } = await req.json() as {
+      messages?: Array<{ role: 'user' | 'assistant'; content: string }>
       userId: string
       weekPlanId: string
+      mode?: 'chat' | 'quick_week' | 'quick_day' | 'quick_recipe'
+      dayOfWeek?: number
+      mealType?: string
     }
 
     if (!userId || !weekPlanId) {
@@ -128,6 +138,14 @@ Deno.serve(async (req: Request) => {
     const isPro =
       profileRow?.subscription_tier === 'pro' &&
       (profileRow?.tier_expires_at == null || new Date(profileRow.tier_expires_at) > now)
+
+    // quick_week is Pro-only
+    if (mode === 'quick_week' && !isPro) {
+      return new Response(
+        JSON.stringify({ error: 'pro_required' }),
+        { status: 402, headers: { ...CORS_HEADERS, 'Content-Type': 'application/json' } },
+      )
+    }
 
     let periodStart = ''
     let used = 0
@@ -201,6 +219,20 @@ Deno.serve(async (req: Request) => {
 
     const today = new Date().toISOString().split('T')[0]
     const systemPrompt = buildSystemPrompt(childRow, weekPlanRow, today, currentSlots)
+
+    // Build messages array — quick modes auto-generate the prompt
+    const dayName = DAY_NAMES[dayOfWeek ?? 0] ?? 'Monday'
+    let messages: Array<{ role: 'user' | 'assistant'; content: string }>
+    if (mode === 'quick_week') {
+      messages = [{ role: 'user', content: 'Plan this week. Fill all empty meal slots for all 7 days.' }]
+    } else if (mode === 'quick_day') {
+      messages = [{ role: 'user', content: `Plan all meals for ${dayName}. Fill empty breakfast, lunch, dinner, snack slots.` }]
+    } else if (mode === 'quick_recipe') {
+      messages = [{ role: 'user', content: `Generate a recipe for ${mealType ?? 'lunch'} on ${dayName} and add it to the plan.` }]
+    } else {
+      // chat mode — use messages from request
+      messages = rawMessages ?? []
+    }
 
     // Create tool executor bound to this user's Supabase client
     const executeTool = createToolExecutor(supabase, userId, weekPlanId)

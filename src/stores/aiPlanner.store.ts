@@ -14,6 +14,50 @@ export const useAIPlannerStore = defineStore('aiPlanner', () => {
   const messages = ref<ChatMessage[]>([])
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const quickLoading = ref(false)
+  const quickError = ref<string | null>(null)
+
+  async function quickGenerate(
+    mode: 'quick_week' | 'quick_day' | 'quick_recipe',
+    options: { dayOfWeek?: number; mealType?: string } = {},
+  ): Promise<boolean> {
+    quickLoading.value = true
+    quickError.value = null
+
+    const weekPlanStore = useWeekPlanStore()
+    const auth = useAuthStore()
+    const subscriptionStore = useSubscriptionStore()
+
+    const { data, error: fnErr } = await supabase.functions.invoke('ai-planner', {
+      body: {
+        mode,
+        userId: auth.userId,
+        weekPlanId: weekPlanStore.plan?.id ?? null,
+        ...options,
+      },
+    })
+
+    if (fnErr) {
+      let errorCode: string | null = null
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const body = await (fnErr as any).context?.json?.()
+        errorCode = body?.error ?? null
+      } catch { /* ignore */ }
+      if (errorCode === 'limit_reached' || errorCode === 'pro_required') {
+        quickError.value = errorCode
+      } else {
+        quickError.value = fnErr.message
+      }
+      quickLoading.value = false
+      return false
+    }
+
+    void data
+    await subscriptionStore.refresh()
+    quickLoading.value = false
+    return true
+  }
 
   async function sendMessage(content: string) {
     messages.value.push({ role: 'user', content })
@@ -56,5 +100,5 @@ export const useAIPlannerStore = defineStore('aiPlanner', () => {
     messages.value = []
   }
 
-  return { messages, loading, error, sendMessage, clearHistory }
+  return { messages, loading, error, quickLoading, quickError, sendMessage, quickGenerate, clearHistory }
 })

@@ -5,6 +5,7 @@ import { useWeekPlanStore } from '@/stores/weekPlan.store'
 import { useChildStore } from '@/stores/child.store'
 import DayColumn from '@/components/meal/DayColumn.vue'
 import ChildCard from '@/components/common/ChildCard.vue'
+import AIPlannerSpeedDial from '@/components/meal/AIPlannerSpeedDial.vue'
 
 const { t } = useI18n()
 
@@ -96,14 +97,8 @@ const weekDays = computed(() =>
       </div>
     </div>
 
-    <!-- AI Planner FAB -->
-    <RouterLink
-      to="/planner/chat"
-      class="absolute bottom-4 right-4 w-14 h-14 rounded-full bg-primary-500 text-white flex items-center justify-center shadow-lg active:bg-primary-600 transition-colors z-10"
-      :aria-label="t('aiPlanner.title')"
-    >
-      <FontAwesomeIcon icon="robot" class="w-6 h-6" />
-    </RouterLink>
+    <!-- AI Planner Speed Dial -->
+    <AIPlannerSpeedDial @done="weekPlan.load()" />
 
   </div>
 </template>

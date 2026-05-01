@@ -79,6 +79,10 @@ export default {
     delete: 'Delete',
     deleteConfirm: 'Tap again to delete',
   },
+  recipe: {
+    deleteTitle: 'Delete recipe?',
+    deleteConfirm: 'This recipe will be permanently removed from your library.',
+  },
   rating: {
     myRating: 'My Rating',
     count: '{count} ratings',
@@ -294,6 +298,7 @@ export default {
     servingLabel: '{n} serving | {n} servings',
     cancel: 'Cancel',
     confirm: 'Confirm',
+    delete: 'Delete',
     edit: 'Edit',
     all: 'All',
   },
@@ -304,6 +309,18 @@ export default {
     thinking: 'Thinking...',
     clearHistory: 'Clear',
     emptyState: 'Hello! I can help plan meals for your child this week. What would you like to do?',
+    quick: {
+      title: 'AI Quick Generate',
+      week: 'Generate for a week',
+      day: 'Generate for a day',
+      recipe: 'Generate 1 recipe',
+      chat: 'Open chat',
+      generating: 'Generating...',
+      proRequired: 'Pro plan required',
+      selectDay: 'Day of week',
+      selectMeal: 'Meal type',
+      generate: 'Generate',
+    },
   },
   feedback: {
     buttonTitle: 'Send Feedback',
