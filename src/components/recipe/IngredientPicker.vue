@@ -116,6 +116,7 @@ async function confirm() {
     amount: amount.value,
     unit: unit.value,
     category: category.value,
+    imageUrl: selectedItem.value?.imageUrl ?? null,
     ...nutrition,
   }
   emit('add', ingredient)

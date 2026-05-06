@@ -48,10 +48,10 @@ function onFileChange(e: Event) {
         v-if="previewUrl"
         :src="previewUrl"
         alt="Preview"
-        class="w-full h-full object-cover"
+        class="w-full h-full object-contain"
       />
       <span v-else class="flex flex-col items-center gap-1 text-gray-400 text-xs">
-        <FontAwesomeIcon icon="image" class="w-8 h-8" />
+        <FontAwesomeIcon icon="image" class="w-12 h-12" />
         {{ placeholder ?? 'Upload photo' }}
       </span>
       <!-- Edit overlay when image present -->

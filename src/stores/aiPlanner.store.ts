@@ -10,6 +10,9 @@ export interface ChatMessage {
   content: string
 }
 
+// Keep last N messages to limit token cost on long conversations (5 turns = 10 messages)
+const HISTORY_WINDOW = 10
+
 export const useAIPlannerStore = defineStore('aiPlanner', () => {
   const messages = ref<ChatMessage[]>([])
   const loading = ref(false)
@@ -28,9 +31,12 @@ export const useAIPlannerStore = defineStore('aiPlanner', () => {
     const auth = useAuthStore()
     const subscriptionStore = useSubscriptionStore()
 
+    const locale = localStorage.getItem('locale') ?? 'en'
+
     const { data, error: fnErr } = await supabase.functions.invoke('ai-planner', {
       body: {
         mode,
+        locale,
         userId: auth.userId,
         weekPlanId: weekPlanStore.plan?.id ?? null,
         ...options,
@@ -70,9 +76,10 @@ export const useAIPlannerStore = defineStore('aiPlanner', () => {
     const weekPlanId = weekPlanStore.plan?.id ?? null
     const userId = auth.userId
 
+    const trimmed = messages.value.slice(-HISTORY_WINDOW)
     const { data, error: fnErr } = await supabase.functions.invoke('ai-planner', {
       body: {
-        messages: messages.value.map(m => ({ role: m.role, content: m.content })),
+        messages: trimmed.map(m => ({ role: m.role, content: m.content })),
         userId,
         weekPlanId,
       },

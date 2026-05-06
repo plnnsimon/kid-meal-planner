@@ -17,8 +17,8 @@ watch(activeTab, (val) => {
   if (val === 3 && !friends.leaderboard.length) friends.loadLeaderboard()
 })
 
-onMounted(async () => {
-  await Promise.all([friends.loadFriends(), friends.loadPendingRequests()])
+onMounted(() => {
+  friends.loadFriends()
 })
 </script>
 

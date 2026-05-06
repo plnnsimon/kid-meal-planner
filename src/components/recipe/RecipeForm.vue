@@ -6,6 +6,18 @@ import { MEAL_TYPES, COMMON_ALLERGENS, INGREDIENT_CATEGORIES } from '@/types'
 import type { Ingredient, MealType, IngredientCategory, NutritionInfo } from '@/types'
 
 const { t } = useI18n()
+
+const CATEGORY_COLORS: Record<string, string> = {
+  produce:   'bg-green-100 text-green-700',
+  dairy:     'bg-blue-100 text-blue-700',
+  meat:      'bg-red-100 text-red-700',
+  pantry:    'bg-yellow-100 text-yellow-700',
+  bakery:    'bg-orange-100 text-orange-700',
+  frozen:    'bg-cyan-100 text-cyan-700',
+  beverages: 'bg-purple-100 text-purple-700',
+  other:     'bg-gray-100 text-gray-700',
+}
+
 import ImageUpload from '@/components/common/ImageUpload.vue'
 import NutritionBadge from './NutritionBadge.vue'
 import IngredientPicker from './IngredientPicker.vue'
@@ -172,7 +184,37 @@ function updateStep(idx: number, value: string) {
   <form class="space-y-5" @submit.prevent="$emit('submit')">
 
     <!-- ── Photo ──────────────────────────────────────────────────────────── -->
-    <section class="bg-white rounded-2xl shadow-sm p-4">
+    <section class="bg-white rounded-2xl shadow-sm p-4 space-y-3">
+      <!-- Ingredient chips preview — mirrors the RecipeCard no-photo fallback -->
+      <div
+        v-if="!form.imageUrl && form.ingredients.length"
+        class="bg-gradient-to-br from-amber-50 to-orange-50 rounded-xl p-3"
+      >
+        <div class="flex flex-wrap gap-2">
+          <div
+            v-for="ing in form.ingredients.slice(0, 8)"
+            :key="ing.name"
+            class="flex flex-col items-center gap-1"
+            style="width: 100px"
+          >
+            <div
+              class="w-[100px] h-[100px] rounded-xl overflow-hidden shrink-0 flex items-center justify-center"
+              :class="ing.imageUrl ? '' : (CATEGORY_COLORS[ing.category] ?? 'bg-gray-100 text-gray-700')"
+            >
+              <img
+                v-if="ing.imageUrl"
+                :src="ing.imageUrl"
+                :alt="ing.name"
+                class="w-full h-full object-cover"
+              />
+              <span v-else class="text-xs font-semibold text-center px-1 leading-tight line-clamp-3">
+                {{ ing.name }}
+              </span>
+            </div>
+<!--            <span class="text-xs text-gray-600 text-center w-full truncate">{{ ing.name }}</span>-->
+          </div>
+        </div>
+      </div>
       <ImageUpload
         :current-url="form.imageUrl"
         shape="rect"

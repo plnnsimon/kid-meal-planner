@@ -10,6 +10,17 @@ import ConfirmModal from '@/components/ui/ConfirmModal.vue'
 defineProps<{ recipe: Recipe; viewOnly?: boolean; saved?: boolean }>()
 const emit = defineEmits<{ click: []; favorite: []; delete: []; save: [] }>()
 
+const CATEGORY_COLORS: Record<string, string> = {
+  produce:   'bg-green-100 text-green-700',
+  dairy:     'bg-blue-100 text-blue-700',
+  meat:      'bg-red-100 text-red-700',
+  pantry:    'bg-yellow-100 text-yellow-700',
+  bakery:    'bg-orange-100 text-orange-700',
+  frozen:    'bg-cyan-100 text-cyan-700',
+  beverages: 'bg-purple-100 text-purple-700',
+  other:     'bg-gray-100 text-gray-700',
+}
+
 const { t } = useI18n()
 const showDeleteConfirm = ref(false)
 </script>
@@ -27,8 +38,21 @@ const showDeleteConfirm = ref(false)
         :alt="recipe.name"
         class="w-full h-full object-cover"
       />
-      <div v-else class="w-full h-full flex items-center justify-center text-4xl">
-        🍽️
+      <div
+        v-else
+        class="w-full h-full bg-gradient-to-br from-amber-50 to-orange-50 p-3 flex flex-col justify-center gap-1"
+      >
+        <div v-if="recipe.ingredients.length" class="flex flex-wrap gap-1.5 content-start">
+          <span
+            v-for="ing in recipe.ingredients.slice(0, 8)"
+            :key="ing.name"
+            :class="CATEGORY_COLORS[ing.category] ?? 'bg-gray-100 text-gray-700'"
+            class="text-xs px-2 py-1 rounded-full font-medium truncate max-w-[110px]"
+          >
+            {{ ing.name }}
+          </span>
+        </div>
+        <div v-else class="w-full h-full flex items-center justify-center text-4xl">🍽️</div>
       </div>
 
       <!-- Save (bookmark) button — viewOnly mode -->

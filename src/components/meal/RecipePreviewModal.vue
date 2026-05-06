@@ -20,7 +20,7 @@ const { hasAllergyConflict, conflictingAllergens } = useAllergyCheck()
 const ingredients = useIngredientsStore()
 
 onMounted(() => {
-  if (!ingredients.isLoaded) ingredients.load()
+  ingredients.loadItems()
 })
 </script>
 

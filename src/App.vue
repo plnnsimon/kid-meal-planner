@@ -48,7 +48,7 @@ function checkBirthday() {
 }
 
 auth.init().then(async () => {
-  if (auth.isAuthenticated) {
+  if (auth.isAuthenticated && !route.meta.requiresAdmin) {
     subscriptionStore.load()
     friendsStore.loadPendingRequests()
     await childStore.load()

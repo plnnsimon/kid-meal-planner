@@ -13,6 +13,33 @@ const CORS_HEADERS = {
 
 const BASIC_MONTHLY_LIMIT = 10
 
+const CLAUDE_MODEL = 'claude-sonnet-4-6'
+
+function isClaudeRetryable(err: unknown): boolean {
+  const status = (err as { status?: number })?.status
+  return status === 429 || status === 500 || status === 529
+}
+
+async function claudeCreate(
+  anthropic: Anthropic,
+  // deno-lint-ignore no-explicit-any
+  params: Parameters<typeof anthropic.messages.create>[0],
+  retries = 3,
+  delayMs = 1000,
+): Promise<Anthropic.Message> {
+  try {
+    return await anthropic.messages.create(params) as Anthropic.Message
+  } catch (err) {
+    if (retries > 0 && isClaudeRetryable(err)) {
+      const status = (err as { status?: number })?.status
+      console.warn(`[claude] retrying after ${delayMs}ms (status=${status}, retries left=${retries})`)
+      await new Promise((r) => setTimeout(r, delayMs))
+      return claudeCreate(anthropic, params, retries - 1, delayMs * 2)
+    }
+    throw err
+  }
+}
+
 async function runWithClaude(
   messages: Array<{ role: 'user' | 'assistant'; content: string }>,
   systemPrompt: string,
@@ -33,8 +60,8 @@ async function runWithClaude(
     content: m.content,
   }))
 
-  let response = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
+  let response = await claudeCreate(anthropic, {
+    model: CLAUDE_MODEL,
     max_tokens: 4096,
     system: systemPrompt,
     // deno-lint-ignore no-explicit-any
@@ -66,8 +93,8 @@ async function runWithClaude(
     claudeMessages.push({ role: 'assistant', content: response.content })
     claudeMessages.push({ role: 'user', content: toolResults })
 
-    response = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+    response = await claudeCreate(anthropic, {
+      model: CLAUDE_MODEL,
       max_tokens: 4096,
       system: systemPrompt,
       // deno-lint-ignore no-explicit-any
@@ -95,6 +122,7 @@ Deno.serve(async (req: Request) => {
       userId,
       weekPlanId,
       mode = 'chat',
+      locale = 'en',
       dayOfWeek,
       mealType,
     } = await req.json() as {
@@ -102,6 +130,7 @@ Deno.serve(async (req: Request) => {
       userId: string
       weekPlanId: string
       mode?: 'chat' | 'quick_week' | 'quick_day' | 'quick_recipe'
+      locale?: string
       dayOfWeek?: number
       mealType?: string
     }
@@ -188,24 +217,32 @@ Deno.serve(async (req: Request) => {
         .eq('period_start', periodStart)
     }
 
-    // Load child profile server-side
-    const { data: childRow } = await supabase
-      .from('child_profiles')
-      .select('name, birth_date, allergies, dietary_restrictions')
-      .eq('user_id', userId)
-      .maybeSingle()
-
-    // Load week plan + current slots server-side
-    const { data: weekPlanRow } = await supabase
-      .from('week_plans')
-      .select('id, week_start_date')
-      .eq('id', weekPlanId)
-      .maybeSingle()
-
-    const { data: slotsRows } = await supabase
-      .from('meal_slots')
-      .select('day_of_week, meal_type, recipe_id, servings, recipe:recipes(name)')
-      .eq('week_plan_id', weekPlanId)
+    // Load child profile, week plan, slots, and recipe count in parallel
+    const [
+      { data: childRow },
+      { data: weekPlanRow },
+      { data: slotsRows },
+      { count: recipeCount },
+    ] = await Promise.all([
+      supabase
+        .from('child_profiles')
+        .select('name, birth_date, allergies, dietary_restrictions')
+        .eq('user_id', userId)
+        .maybeSingle(),
+      supabase
+        .from('week_plans')
+        .select('id, week_start_date')
+        .eq('id', weekPlanId)
+        .maybeSingle(),
+      supabase
+        .from('meal_slots')
+        .select('day_of_week, meal_type, recipe_id, servings, recipe:recipes(name)')
+        .eq('week_plan_id', weekPlanId),
+      supabase
+        .from('recipes')
+        .select('id', { count: 'exact', head: true })
+        .eq('user_id', userId),
+    ])
 
     const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
     // deno-lint-ignore no-explicit-any
@@ -218,7 +255,7 @@ Deno.serve(async (req: Request) => {
     }))
 
     const today = new Date().toISOString().split('T')[0]
-    const systemPrompt = buildSystemPrompt(childRow, weekPlanRow, today, currentSlots)
+    const systemPrompt = buildSystemPrompt(childRow, weekPlanRow, today, currentSlots, mode, locale, recipeCount ?? 0)
 
     // Build messages array — quick modes auto-generate the prompt
     const dayName = DAY_NAMES[dayOfWeek ?? 0] ?? 'Monday'
@@ -251,10 +288,10 @@ Deno.serve(async (req: Request) => {
 
     let finalText: string
     try {
-      finalText = groqKey
-        ? await runWithGroq(messages, systemPrompt, toolDefinitions, executeTool, groqKey)
-        : anthropicKey
-          ? await runWithClaude(messages, systemPrompt, executeTool, anthropicKey)
+      finalText = anthropicKey
+        ? await runWithClaude(messages, systemPrompt, executeTool, anthropicKey)
+        : groqKey
+          ? await runWithGroq(messages, systemPrompt, toolDefinitions, executeTool, groqKey)
           : await runWithGemini(messages, systemPrompt, toolDefinitions, executeTool, googleKey!)
     } catch (llmErr) {
       if (!isPro) {

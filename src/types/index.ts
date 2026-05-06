@@ -102,6 +102,7 @@ export interface Ingredient {
   amount: number
   unit: string
   category: IngredientCategory
+  imageUrl?: string | null
   // Nutrition per 100 g — populated when selected from Open Food Facts
   caloriesPer100g?: number
   proteinPer100g?: number

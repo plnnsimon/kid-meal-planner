@@ -8,9 +8,7 @@ export function useIngredientSearch() {
   const ingredientsStore = useIngredientsStore()
 
   // Non-blocking pre-load so results are ready when user opens search
-  if (!ingredientsStore.isLoaded) {
-    ingredientsStore.load()
-  }
+  ingredientsStore.loadItems()
 
   const results = ref<FoodItem[]>([])
   // Reflect store loading state so IngredientPicker shows spinner during DB fetch

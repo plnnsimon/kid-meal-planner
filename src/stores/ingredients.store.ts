@@ -15,9 +15,10 @@ export const useIngredientsStore = defineStore('ingredients', () => {
   const saving = ref(false)
   const error = ref<string | null>(null)
   const isLoaded = ref(false)
+  const tastedChildId = ref<string | null>(null)
 
-  async function load() {
-    if (!auth.userId) return
+  async function loadItems(): Promise<void> {
+    if (!auth.userId || isLoaded.value) return
     loading.value = true
     error.value = null
     try {
@@ -29,20 +30,28 @@ export const useIngredientsStore = defineStore('ingredients', () => {
         .order('name')
       if (ingErr) throw ingErr
       items.value = (ingData ?? []).map(mapRow)
-
-      if (child.selectedChild?.id) {
-        const { data: tastedData, error: tastedErr } = await supabase
-          .from('child_tasted_ingredients')
-          .select('ingredient_id')
-          .eq('child_profile_id', child.selectedChild.id)
-        if (tastedErr) throw tastedErr
-        tastedIds.value = new Set((tastedData ?? []).map((r: { ingredient_id: string }) => r.ingredient_id))
-      }
       isLoaded.value = true
     } catch (e) {
       error.value = (e as Error).message
     } finally {
       loading.value = false
+    }
+  }
+
+  async function loadTasted(): Promise<void> {
+    if (!child.selectedChild?.id) return
+    if (tastedChildId.value === child.selectedChild.id) return
+    error.value = null
+    try {
+      const { data: tastedData, error: tastedErr } = await supabase
+        .from('child_tasted_ingredients')
+        .select('ingredient_id')
+        .eq('child_profile_id', child.selectedChild.id)
+      if (tastedErr) throw tastedErr
+      tastedIds.value = new Set((tastedData ?? []).map((r: { ingredient_id: string }) => r.ingredient_id))
+      tastedChildId.value = child.selectedChild.id
+    } catch (e) {
+      error.value = (e as Error).message
     }
   }
 
@@ -258,7 +267,8 @@ export const useIngredientsStore = defineStore('ingredients', () => {
           image_url: payload.imageUrl ?? null,
         })
       if (err) throw err
-      await load()
+      isLoaded.value = false
+      await loadItems()
     } catch (e) {
       error.value = (e as Error).message
       throw e
@@ -370,5 +380,5 @@ export const useIngredientsStore = defineStore('ingredients', () => {
     return null
   })
 
-  return { items, tastedIds, loading, saving, error, isLoaded, load, toggleTasted, addCustom, updateCustom, removeCustom, loadFriendTasted, adoptIngredient, isTastedByName, explorationPercent, currentMilestone, adminCreate, adminUpdate, adminDelete, adminUploadImage }
+  return { items, tastedIds, loading, saving, error, isLoaded, tastedChildId, loadItems, loadTasted, toggleTasted, addCustom, updateCustom, removeCustom, loadFriendTasted, adoptIngredient, isTastedByName, explorationPercent, currentMilestone, adminCreate, adminUpdate, adminDelete, adminUploadImage }
 })

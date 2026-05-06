@@ -12,6 +12,7 @@ export const useSubscriptionStore = defineStore('subscription', () => {
   const generationsLimit = ref<number>(10)
   const loading = ref(false)
   const error = ref<string | null>(null)
+  const isLoaded = ref(false)
 
   const isPro = computed(() => {
     if (tier.value !== 'pro') return false
@@ -20,7 +21,7 @@ export const useSubscriptionStore = defineStore('subscription', () => {
   })
 
   async function load() {
-    if (!auth.userId) return
+    if (!auth.userId || isLoaded.value) return
     loading.value = true
     error.value = null
     try {
@@ -54,6 +55,7 @@ export const useSubscriptionStore = defineStore('subscription', () => {
       if (usageErr) throw usageErr
 
       generationsUsed.value = usageData?.generation_count ?? 0
+      isLoaded.value = true
     } catch (e) {
       error.value = (e as Error).message
     } finally {
@@ -62,8 +64,9 @@ export const useSubscriptionStore = defineStore('subscription', () => {
   }
 
   async function refresh() {
+    isLoaded.value = false
     await load()
   }
 
-  return { tier, tierExpiresAt, generationsUsed, generationsLimit, isPro, loading, error, load, refresh }
+  return { tier, tierExpiresAt, generationsUsed, generationsLimit, isPro, loading, error, isLoaded, load, refresh }
 })

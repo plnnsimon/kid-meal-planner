@@ -56,9 +56,7 @@ async function handleDelete() {
 
 // ── Mount ─────────────────────────────────────────────────────────────────────
 onMounted(() => {
-  if (!store.isLoaded) {
-    store.load()
-  }
+  store.loadItems()
 })
 </script>
 

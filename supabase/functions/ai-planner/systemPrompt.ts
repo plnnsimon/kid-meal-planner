@@ -28,125 +28,102 @@ function calculateAge(birthDate: string): string {
     months += 12
   }
   if (today.getDate() < birth.getDate()) months--
-  if (years === 0) return `${months} month${months !== 1 ? 's' : ''} old`
-  if (months === 0) return `${years} year${years !== 1 ? 's' : ''} old`
-  return `${years} year${years !== 1 ? 's' : ''} and ${months} month${months !== 1 ? 's' : ''} old`
+  if (years === 0) return `${months}mo`
+  if (months === 0) return `${years}y`
+  return `${years}y${months}mo`
 }
+
+const LOCALE_LANGUAGE: Record<string, string> = {
+  en: 'English',
+  uk: 'Ukrainian',
+}
+
+const RECIPE_LIBRARY_THRESHOLD = 30
+
+const MEAL_ABBR: Record<string, string> = { breakfast: 'B', lunch: 'L', dinner: 'D', snack: 'S' }
+const MEAL_ORDER = ['breakfast', 'lunch', 'dinner', 'snack']
+const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 
 export function buildSystemPrompt(
   child: ChildProfile | null,
   weekPlan: WeekPlan | null,
   today: string,
   currentSlots: MealSlotSummary[] = [],
+  mode = 'chat',
+  locale = 'en',
+  recipeCount = 0,
 ): string {
   const lines: string[] = [
-    'You are a friendly and knowledgeable meal planning assistant helping parents plan healthy, age-appropriate meals for their child.',
+    'Pediatric nutritionist AI. Prioritize allergen safety, age-appropriate nutrition, balanced variety.',
     '',
-    `Today's date: ${today}`,
+    `Today: ${today}`,
+    weekPlan ? `Week: ${weekPlan.week_start_date} (ID: ${weekPlan.id})` : 'No active week plan.',
   ]
 
-  if (weekPlan) {
-    lines.push(`Current week starts: ${weekPlan.week_start_date}`)
-    lines.push(`Week plan ID: ${weekPlan.id}`)
-  } else {
-    lines.push('No active week plan found.')
-  }
-
-  lines.push('')
-  lines.push('## Child Profile')
-
+  // Child profile
+  lines.push('', '## Child')
   if (child) {
     lines.push(`Name: ${child.name}`)
-    if (child.birth_date) {
-      lines.push(`Age: ${calculateAge(child.birth_date)} (born ${child.birth_date})`)
-    } else {
-      lines.push('Age: not provided')
-    }
-
-    if (child.allergies.length > 0) {
-      lines.push(`Allergies: ${child.allergies.join(', ')}`)
-    } else {
-      lines.push('Allergies: none listed')
-    }
-
-    if (child.dietary_restrictions.length > 0) {
-      lines.push(`Dietary restrictions: ${child.dietary_restrictions.join(', ')}`)
-    } else {
-      lines.push('Dietary restrictions: none listed')
-    }
+    lines.push(child.birth_date ? `Age: ${calculateAge(child.birth_date)}` : 'Age: unknown')
+    lines.push(`Allergies: ${child.allergies.length ? child.allergies.join(', ') : 'none'}`)
+    lines.push(`Diet: ${child.dietary_restrictions.length ? child.dietary_restrictions.join(', ') : 'none'}`)
   } else {
-    lines.push('No child profile set up yet.')
+    lines.push('No child profile.')
   }
 
-  // Embed current week plan so the model skips get_child_profile / get_week_plan tool calls
-  lines.push('')
-  lines.push('## Current Week Plan (already loaded — do NOT call get_week_plan)')
+  // Week plan — compact format (do NOT call get_week_plan / get_child_profile)
+  lines.push('', '## Week Plan (pre-loaded — skip get_week_plan, skip get_child_profile)')
   if (currentSlots.length === 0) {
-    lines.push('No meals planned yet this week.')
+    lines.push('All slots empty.')
   } else {
-    const MEAL_ORDER = ['breakfast', 'lunch', 'dinner', 'snack']
     const byDay = new Map<number, MealSlotSummary[]>()
     for (const slot of currentSlots) {
       if (!byDay.has(slot.day_of_week)) byDay.set(slot.day_of_week, [])
       byDay.get(slot.day_of_week)!.push(slot)
     }
     for (const [dayIdx, slots] of [...byDay.entries()].sort((a, b) => a[0] - b[0])) {
-      const dayName = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][dayIdx]
       const sorted = slots.sort((a, b) => MEAL_ORDER.indexOf(a.meal_type) - MEAL_ORDER.indexOf(b.meal_type))
-      lines.push(`${dayName}: ${sorted.map(s => `${s.meal_type}=${s.recipe_name ?? 'empty'}`).join(', ')}`)
+      lines.push(`${DAY_SHORT[dayIdx]}: ${sorted.map(s => `${MEAL_ABBR[s.meal_type] ?? s.meal_type}=${s.recipe_name ?? '-'}`).join(' ')}`)
     }
   }
 
-  lines.push('')
-  lines.push('## Available Tools')
-  lines.push('You have access to the following tools:')
-  lines.push('- `get_child_profile`: Fetch the child\'s profile — SKIP this, profile is already above')
-  lines.push('- `get_recipes`: Fetch available recipes, optionally filtered by meal type or excluding allergens')
-  lines.push('- `get_week_plan`: Fetch the current week\'s meal plan — SKIP this, plan is already above')
-  lines.push('- `set_meal_slot`: Assign a recipe to a specific day and meal type')
-  lines.push('- `clear_meal_slot`: Remove a recipe from a specific day and meal type')
-  lines.push('- `get_tasted_ingredients`: Fetch the list of ingredients the child has already tasted')
-  lines.push('- `search_ingredients`: Search the user\'s ingredient list by name or category — use before create_recipe to find real ingredient names')
-  lines.push('- `create_recipe`: Generate and save a new healthy, age-appropriate recipe when no suitable recipes exist')
+  // Rules
+  lines.push('', '## Rules')
+  lines.push('Scope: "plan [meal] for [day]" → 1 slot. "plan [day]" → 4 slots that day. "plan week" → all empty slots.')
+  lines.push('Gap-fill: slots already filled above → skip. Fill only empty (-).')
+  lines.push(`Library: ${recipeCount}/${RECIPE_LIBRARY_THRESHOLD} recipes.`)
 
-  lines.push('')
-  lines.push('## Rules')
-  lines.push('')
-  lines.push('### Scope of planning requests')
-  lines.push('Interpret the user\'s request scope precisely:')
-  lines.push('- "Plan [specific meal] for [day]" (e.g. "plan lunch for Wednesday") → fill ONLY that one meal slot.')
-  lines.push('- "Plan [day]" or "Plan meals for [day]" (e.g. "plan Wednesday", "plan meals for Thursday") → fill ALL 4 meal slots for that day: breakfast, lunch, dinner, snack.')
-  lines.push('- "Plan the week" or "Plan this week" → fill ALL empty slots across all 7 days (all 4 meal types per day).')
-  lines.push('')
-  lines.push('### Gap-filling — ALWAYS check before adding')
-  lines.push('The current week plan is already shown above under "## Current Week Plan".')
-  lines.push('Before calling set_meal_slot for any slot, check the current plan above:')
-  lines.push('- If a slot already has a recipe → SKIP it, do not replace it.')
-  lines.push('- If a slot is empty → fill it.')
-  lines.push('When planning a full day or full week, identify ALL empty slots first, then fill only those.')
-  lines.push('Never overwrite an existing slot unless the user explicitly asks to replace or change it.')
-  lines.push('')
-  lines.push('### Recipe sourcing')
-  lines.push('- Call `get_recipes` first. Filter by `meal_type` matching the slot you are filling.')
-  lines.push('- If no suitable recipes exist, you MUST create one using the following mandatory steps:')
-  lines.push('  1. Call `search_ingredients` with no arguments to load the full ingredient list.')
-  lines.push('  2. If you need ingredients from a specific category (e.g. produce, dairy, meat), call `search_ingredients` again with that category.')
-  lines.push('  3. Build the recipe using ONLY ingredient names returned by `search_ingredients`. Do NOT invent ingredient names that were not in the search results.')
-  lines.push('  4. Call `create_recipe` with those exact ingredient names.')
-  lines.push('  5. Immediately call `set_meal_slot` with the returned `recipe_id`.')
-  lines.push('- Never tell the user there are no recipes — always create one if needed.')
-  lines.push('- Do NOT skip `search_ingredients` before `create_recipe` under any circumstance.')
-  lines.push('- Prefer variety across the day: do not assign the same recipe to multiple meal slots unless no alternative exists.')
-  lines.push('')
-  lines.push('### Other rules')
-  lines.push('- NEVER call `get_child_profile` or `get_week_plan` — this data is already provided above.')
-  lines.push('- ALWAYS check allergies before assigning any recipe. Never assign a recipe containing an allergen the child has.')
+  if (recipeCount < RECIPE_LIBRARY_THRESHOLD) {
+    lines.push('LIBRARY BUILDING MODE: Always create new recipes. Never reuse existing — grow library with diverse options.')
+  } else {
+    lines.push('MATURE LIBRARY MODE: Prefer existing recipes from get_recipes. Create only if no suitable match.')
+  }
+
+  lines.push('', 'Recipe workflow (mandatory, exact order):')
+  lines.push('1. get_recipes filtered by meal_type.')
+  lines.push('   Building mode: always create new. Mature mode: if suitable exists → set_meal_slot.')
+  lines.push('2. Before create_recipe, gather ingredients:')
+  lines.push('   a. search_ingredients (no args) — base list.')
+  lines.push('   b. search_ingredients by category (produce/dairy/meat/pantry) as needed.')
+  lines.push('   c. search_ingredients by specific query terms.')
+  lines.push('3. Use ONLY ingredient names from search results. NEVER invent names. Substitute if not found.')
+  lines.push('4. create_recipe with exact ingredient names + full nutritional data.')
+  lines.push('5. set_meal_slot with returned recipe_id.')
+
+  lines.push('', 'Other rules:')
+  lines.push('- Never use allergen ingredients. Check allergies before every slot.')
   lines.push('- Respect all dietary restrictions.')
-  lines.push('- day_of_week: 0=Monday, 1=Tuesday, 2=Wednesday, 3=Thursday, 4=Friday, 5=Saturday, 6=Sunday.')
-  lines.push('- meal_type must be one of: breakfast, lunch, dinner, snack.')
-  lines.push('- Generated recipes must be healthy, age-appropriate, and avoid all allergens and dietary restrictions.')
-  lines.push('- Provide a brief summary of what was planned after completing all set_meal_slot calls.')
-  lines.push('- IMPORTANT: Respond in the same language the user writes in. When calling `create_recipe`, also write the recipe name, description, ingredient names, and instructions in that same language.')
+  lines.push('- day_of_week: 0=Mon 1=Tue 2=Wed 3=Thu 4=Fri 5=Sat 6=Sun')
+  lines.push('- meal_type: breakfast | lunch | dinner | snack')
+  lines.push('- Vary recipes across day — different food group/flavour per slot.')
+  lines.push('- Summarize what was planned after all set_meal_slot calls.')
+
+  if (mode === 'chat') {
+    lines.push('- Match user\'s language. create_recipe content in same language.')
+  } else {
+    const language = LOCALE_LANGUAGE[locale] ?? 'English'
+    lines.push(`- Respond in ${language}. create_recipe content in ${language}.`)
+  }
 
   return lines.join('\n')
 }

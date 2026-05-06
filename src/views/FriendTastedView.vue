@@ -27,7 +27,7 @@ const error = ref<string | null>(null)
 onMounted(async () => {
   try {
     if (!child.profile) await child.load()
-    if (ingredients.items.length === 0) await ingredients.load()
+    await ingredients.loadItems()
 
     friendChildProfile.value = await friends.loadFriendChildProfile(friendId)
 

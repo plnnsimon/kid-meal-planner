@@ -23,7 +23,7 @@ const recipe = ref<Recipe | null>(null)
 const loading = ref(true)
 
 onMounted(async () => {
-  if (!ingredients.isLoaded) ingredients.load()
+  ingredients.loadItems()
 
   const { data, error } = await supabase
     .from('recipes')

@@ -30,7 +30,8 @@ onMounted(async () => {
   if (!child.profile && !child.loading) {
     await child.load()
   }
-  await ingredients.load()
+  await ingredients.loadItems()
+  await ingredients.loadTasted()
 })
 
 function startEdit(item: FoodItem) {
